@@ -1,7 +1,6 @@
 // services/AuthService.ts
 import auth from '@react-native-firebase/auth';
 
-
 export default function AuthService() {
 
   const signIn = async (email: string, password: string) => {
@@ -11,6 +10,17 @@ export default function AuthService() {
       return user;
     } catch (error) {
       console.error('Failed to sign in:', error);
+      throw error;
+    }
+  };
+
+  const signInWithPhoneNumber = async (phoneNumber: string) => {
+    try {
+      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+      console.log('Confirmation result:', confirmation);
+      return confirmation;
+    } catch (error) {
+      console.error('Failed to sign in with phone number:', error);
       throw error;
     }
   };
@@ -48,6 +58,7 @@ export default function AuthService() {
 
   return {
     signIn,
+    signInWithPhoneNumber,
     signOut,
     signUp,
     resetPassword,
