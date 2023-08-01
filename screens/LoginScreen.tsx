@@ -1,5 +1,5 @@
 // LoginScreen.tsx
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Dispatch, useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, TextInput, Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { AuthStackNavigationProp } from '../types/types';
@@ -14,6 +14,8 @@ import Toast from 'react-native-toast-message';
 import { PhoneAuthProvider } from 'firebase/auth';
 import { firebase } from '@react-native-firebase/auth';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
 
 const emailRegExp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
 const passwordRegExp = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
@@ -24,6 +26,13 @@ interface LoginScreenProps {
   password?: string;
   onLogin?: (username: string, password: string) => void;
   phoneNumber?: string;
+  formattedPhoneNumber?: string;
+  rawPhoneNumber?: string;
+  loading?: boolean;
+  handleLogin: () => Promise<void>;
+  handlePhoneNumberLogin: () => Dispatch<any>;
+  isPasswordVisible?: boolean;
+  togglePasswordVisibility: () => void;
 }
 
 const useLogin = () => {
@@ -39,6 +48,12 @@ const useLogin = () => {
   const [isPhoneLogin, setIsPhoneLogin] = useState(false);
   const [isPhoneVerifying, setIsPhoneVerifying] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible(!isPasswordVisible);
+  };
 
   const formatPhoneNumber = (string: string) => {
     // Filter only numbers from the input
@@ -200,6 +215,7 @@ const handlePhoneNumberLogin = async () => {
       topOffset: 30,
       bottomOffset: 40
     });
+    setIsPhoneVerifying(false);
   }
 };
 
@@ -259,6 +275,7 @@ const handleCancelVerification = () => {
   setIsPhoneVerifying(false);
   setConfirmResult(null);
   setVerificationCode("");
+
 };
 
   return {
@@ -284,7 +301,9 @@ const handleCancelVerification = () => {
     setIsPhoneLogin,
     handlePhoneNumberChange,
     formatPhoneNumber,
-    setFormattedPhoneNumber
+    setFormattedPhoneNumber,
+    isPasswordVisible,
+    togglePasswordVisibility,
   };
 };
 
@@ -313,7 +332,9 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
     setIsPhoneLogin,
     handlePhoneNumberChange,
     formattedPhoneNumber,
-    setFormattedPhoneNumber
+    setFormattedPhoneNumber,
+    isPasswordVisible,
+    togglePasswordVisibility,
   } = useLogin();
 
   const isDarkTheme = useAppSelector((state) => state.theme.dark);
@@ -376,8 +397,17 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
                             label="Password"
                             value={password}
                             onChangeText={setPassword}
-                            secureTextEntry
+                            secureTextEntry={!isPasswordVisible}
                             style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
+                            right={
+                              <TouchableOpacity onPress={togglePasswordVisibility} style={{ justifyContent: 'center', marginRight: 10 }}>
+                                <Icon 
+                                  name={isPasswordVisible ? 'eye-off' : 'eye'}
+                                  size={50} 
+                                  color={theme.colors.background}
+                                />
+                              </TouchableOpacity>
+                            }
                         />
                         <Button mode="contained" onPress={handleLogin} style={{ marginBottom: 10 }} disabled={isLoginDisabled}>
                             Login
@@ -404,7 +434,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
             </>
         )}
     </View>
-);
+  );
 };
 
 export default LoginScreen;
