@@ -2,6 +2,13 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, ParamListBase } from '@react-navigation/native';
 
+export interface User {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string;
+}
+
 // Define the list of screens in the Root stack navigator
 export type RootStackParamList = {
     Auth: undefined;

@@ -1,20 +1,21 @@
 //redux\actions\authActions.ts
 import { AppThunk } from '../store'
 import { getAuth, sendEmailVerification, signInWithEmailAndPassword, signOut, User, sendPasswordResetEmail } from "@firebase/auth";
-import { logIn, logOut, setEmailVerified } from '../userSlice'
+import { userLogin, userLogout, setLoading, setEmailVerified } from '../userSlice'
 
 export const checkAuth = (): AppThunk => async (dispatch) => {
   const auth = getAuth();
   auth.onAuthStateChanged(user => {
     if (user) {
-      dispatch(logIn());
+      dispatch(userLogin(user.email || '', user.uid));
       console.log('User is logged in');
     } else {
-      dispatch(logOut());
+      dispatch(userLogout());
       console.log('User is logged out');
     }
   });
 };
+
 
 export const setCurrentUser = (user: User | null) => ({
     type: 'SET_CURRENT_USER',
@@ -45,7 +46,7 @@ export const loginUser = (email: string, password: string): AppThunk => async (d
   const auth = getAuth();
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    dispatch(logIn());
+    dispatch(userLogin(email, password));
     console.log('User is logged in');
   } catch (error) {
     console.log(error);
@@ -57,7 +58,7 @@ export const logoutUser = (): AppThunk => async (dispatch) => {
   const auth = getAuth();
   try {
     await signOut(auth);
-    dispatch(logOut());
+    dispatch(userLogout());
     console.log('User is logged out');
   } catch (error) {
     console.log(error);
