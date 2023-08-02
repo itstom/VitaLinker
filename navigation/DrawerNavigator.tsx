@@ -2,14 +2,13 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { useSelector, useDispatch } from 'react-redux';
-import { Drawer as PaperDrawer, Switch, Divider, List } from 'react-native-paper';
+import { Drawer as PaperDrawer, Switch, Divider, List, Text } from 'react-native-paper';
 import { View } from 'react-native';
 import AppNavigator from './AppNavigator';
 import { logoutUser } from '../redux/actions/authActions';
 import { User } from 'firebase/auth';
 import { RootState } from '../redux/store';
 import { toggleTheme } from '../redux/themeSlice';
-import { useTheme } from 'react-native-paper';
 
 interface AuthState {
     isAuthenticated: boolean;
@@ -32,11 +31,13 @@ const CustomDrawerContent = (props: { navigation: { navigate: (arg0: string) => 
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-    <PaperDrawer.Section title="Preferences" >
-      <View>
-      <Switch value={theme.dark} onValueChange={handleToggleTheme} />
+      <PaperDrawer.Section title="Preferences">
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+          <Text style={{ flex: 1, fontFamily:theme.fonts.medium.fontFamily }}>Dark Mode</Text>
+          <Switch value={theme.dark} onValueChange={handleToggleTheme} />
+        </View>
         <Divider />
-      </View>
+      </PaperDrawer.Section>
       {isAuthenticated && (
         <PaperDrawer.Section title="Navigation">
           <List.Item 
@@ -60,10 +61,9 @@ const CustomDrawerContent = (props: { navigation: { navigate: (arg0: string) => 
       {isAuthenticated && (
         <PaperDrawer.Item label="Logout" onPress={onLogout} />
       )}
-    </PaperDrawer.Section>
     </View>
   );
-};
+}
 
 export default function DrawerNavigator() {
     return (

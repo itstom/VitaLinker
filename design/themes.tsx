@@ -1,38 +1,106 @@
 //design/themes.tsx
-import { MD2DarkTheme, MD2LightTheme } from 'react-native-paper';
+import { MD2DarkTheme, MD2LightTheme, configureFonts } from 'react-native-paper';
+import darkLogo from '../assets/darkLogo.png';
+import lightLogo from '../assets/lightLogo.png';
+
+const fontConfig = {
+  web: {
+    regular: {
+      fontFamily: 'sans-serif',
+      fontWeight: 'normal',
+    },
+    medium: {
+      fontFamily: 'sans-serif-medium',
+      fontWeight: 'normal',
+    },
+    light: {
+      fontFamily: 'sans-serif-light',
+      fontWeight: 'normal',
+    },
+    thin: {
+      fontFamily: 'sans-serif-thin',
+      fontWeight: 'normal',
+    },
+  },
+  ios: {
+    regular: {
+      fontFamily: 'sans-serif',
+      fontWeight: 'normal',
+    },
+    medium: {
+      fontFamily: 'sans-serif-medium',
+      fontWeight: 'normal',
+    },
+    light: {
+      fontFamily: 'sans-serif-light',
+      fontWeight: 'normal',
+    },
+    thin: {
+      fontFamily: 'sans-serif-thin',
+      fontWeight: 'normal',
+    },
+  },
+  android: {
+    regular: {
+      fontFamily: 'sans-serif',
+      fontWeight: 'normal',
+    },
+    medium: {
+      fontFamily: 'sans-serif-medium',
+      fontWeight: 'normal',
+    },
+    light: {
+      fontFamily: 'sans-serif-light',
+      fontWeight: 'normal',
+    },
+    thin: {
+      fontFamily: 'sans-serif-thin',
+      fontWeight: 'normal',
+    },
+  }
+} as const;
+
 
 export const lightTheme = {
   ...MD2LightTheme,
+  fonts: configureFonts({config: fontConfig, isV3: false}),
   colors: {
     ...MD2LightTheme.colors,
-    primary: "rgb(32, 95, 166)",
-    onPrimary: "rgb(255, 255, 255)",
-    primaryContainer: "rgb(213, 227, 255)",
-    onPrimaryContainer: "rgb(0, 28, 59)",
-    secondary: "rgb(0, 104, 116)",
-    onSecondary: "rgb(255, 255, 255)",
-    secondaryContainer: "rgb(151, 240, 255)",
-    onSecondaryContainer: "rgb(0, 31, 36)",
-    surface: 'white',
-    background: "rgb(246, 246, 252)"
+    primary: "rgb(0, 141, 182)", // primary color for your interface
+    onPrimary: "rgb(0, 49, 95)", // color for content on primary color
+    primaryContainer: "rgb(0, 71, 135)", // lighter version of the primary color
+    onPrimaryContainer: "rgb(213, 227, 255)", // color for content on the primary container
+    secondary: "rgb(79, 216, 235)", // secondary color for your interface
+    onSecondary: "rgb(0, 54, 61)", // color for content on secondary color
+    secondaryContainer: "rgb(0, 79, 88)", // lighter version of the secondary color
+    onSecondaryContainer: "rgb(151, 240, 255)", // color for content on the secondary container
+    surface: 'black', // color for the surfaces of components
+    background: "rgb(246, 246, 252)", // color for the background of your app
+    placeholder: "rgb(231, 231, 241)", // Input fields
+    text: "rgb(105, 124, 141)", // Color for Words
   },
+  logo: lightLogo,
 };
 
 export const darkTheme = {
   ...MD2DarkTheme,
+  fonts: configureFonts({config: fontConfig, isV3: false}),
   colors: {
     ...MD2DarkTheme.colors,
-    primary: "rgb(166, 200, 255)",
-    onPrimary: "rgb(0, 49, 95)",
-    primaryContainer: "rgb(0, 71, 135)",
-    onPrimaryContainer: "rgb(213, 227, 255)",
-    secondary: "rgb(79, 216, 235)",
-    onSecondary: "rgb(0, 54, 61)",
-    secondaryContainer: "rgb(0, 79, 88)",
-    onSecondaryContainer: "rgb(151, 240, 255)",
-    surface: 'black',
-    background: "rgb(13, 24, 33)"
+    primary: "rgb(0, 141, 182)", // primary color for your interface
+    onPrimary: "rgb(0, 49, 95)", // color for content on primary color
+    primaryContainer: "rgb(0, 71, 135)", // lighter version of the primary color
+    onPrimaryContainer: "rgb(213, 227, 255)", // color for content on the primary container
+    secondary: "rgb(79, 216, 235)", // secondary color for your interface
+    onSecondary: "rgb(0, 54, 61)", // color for content on secondary color
+    secondaryContainer: "rgb(0, 79, 88)", // lighter version of the secondary color
+    onSecondaryContainer: "rgb(151, 240, 255)", // color for content on the secondary container
+    surface: 'black', // color for the surfaces of components
+    background: "rgb(13, 24, 33)", // color for the background of your app
+    placeholder: "rgb(29, 43, 55)", // Input fields
+    text: "rgb(105, 124, 141)", // Color for Words
   },
+  logo: darkLogo,
 };
 
 // Define our custom theme type here:

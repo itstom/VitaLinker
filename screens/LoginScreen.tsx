@@ -15,6 +15,7 @@ import { PhoneAuthProvider } from 'firebase/auth';
 import { firebase } from '@react-native-firebase/auth';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { AppTheme } from '../design/themes';
 
 
 const emailRegExp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
@@ -308,7 +309,8 @@ const handleCancelVerification = () => {
 };
 
 const LoginScreen: React.FC<LoginScreenProps> = () => {
-  const theme = useTheme();
+  const theme = useTheme() as AppTheme;
+  const logo = theme.logo;
   const navigation = useNavigation<AuthStackNavigationProp<'Login'>>();
   const { 
     email,
@@ -365,7 +367,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
         {!loading && (
             <>
                 <Image 
-                    source={require('../assets/logo03.png')}
+                    source={logo}
                     resizeMode="contain"
                     style={{ alignSelf: 'center', marginBottom: 20, width: '100%', height: 150 }}
                 />
