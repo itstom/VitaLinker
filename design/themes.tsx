@@ -14,7 +14,7 @@ export const lightTheme = {
     secondaryContainer: "rgb(151, 240, 255)",
     onSecondaryContainer: "rgb(0, 31, 36)",
     surface: 'white',
-    background: 'white'
+    background: "rgb(246, 246, 252)"
   },
 };
 
@@ -31,7 +31,7 @@ export const darkTheme = {
     secondaryContainer: "rgb(0, 79, 88)",
     onSecondaryContainer: "rgb(151, 240, 255)",
     surface: 'black',
-    background: 'black'
+    background: "rgb(13, 24, 33)"
   },
 };
 

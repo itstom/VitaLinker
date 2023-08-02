@@ -365,7 +365,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
         {!loading && (
             <>
                 <Image 
-                    source={require('../assets/logo02.png')}
+                    source={require('../assets/logo03.png')}
                     resizeMode="contain"
                     style={{ alignSelf: 'center', marginBottom: 20, width: '100%', height: 150 }}
                 />

@@ -8,7 +8,7 @@ import { store, RootState } from './redux/store';
 import { NavigationContainer } from '@react-navigation/native';
 import { PaperProvider } from 'react-native-paper';
 import { persistTheme, loadTheme } from './redux/themeSlice';
-import { lightTheme, darkTheme } from './design/themes';
+import { lightTheme, darkTheme, AppTheme } from './design/themes';
 import { AppDispatch } from './redux/store';
 import Toast from 'react-native-toast-message';  // Add this
 
@@ -43,7 +43,8 @@ export default function App() {
 
 // Now, we have the theme related code in a separate component, which is wrapped by the Provider
 const AppContentWithTheme = () => {
-  const theme = useSelector((state: RootState) => state.theme.current);
+  const { dark } = useSelector((state: RootState) => state.theme);
+  const theme = dark ? darkTheme : lightTheme;
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
@@ -51,7 +52,7 @@ const AppContentWithTheme = () => {
   }, [dispatch]);
 
   return (
-    <PaperProvider theme={theme}>
+    <PaperProvider theme={theme as AppTheme}>
       <NavigationContainer>
         <AppContent />
       </NavigationContainer>
