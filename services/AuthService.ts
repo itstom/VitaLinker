@@ -1,5 +1,6 @@
 // services/AuthService.ts
 import auth from '@react-native-firebase/auth';
+import { loginUserWithPhone } from '../redux/actions/authActions';
 
 export default function AuthService() {
 

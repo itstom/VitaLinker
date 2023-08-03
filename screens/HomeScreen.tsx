@@ -1,26 +1,31 @@
-// HomeScreen.tsx
-
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
-import { RootState } from '../redux/store';
+import { RootState, useAppSelector } from '../redux/store';
+import { MainStackNavigationProp, MainStackRouteProp } from '../types/types';
 
 interface HomeScreenProps {
-  // Add props here
+  navigation: MainStackNavigationProp<'Home'>;
+  route: MainStackRouteProp<'Home'>;
 }
 
-const HomeScreen: React.FC<HomeScreenProps> = (props) => {
-  // Use useSelector hook here to access state from Redux store
-  const theme = useSelector((state: RootState) => state.theme.current);
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
-  const user = useSelector((state: RootState) => state.auth.user);
+const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+  const theme = useAppSelector((state: RootState) => state.theme.current);
+  const isAuthenticated = useAppSelector((state: RootState) => state.auth.isAuthenticated);
+  const user = useAppSelector((state: RootState) => state.auth.user);
+  const avg24h = useAppSelector((state: RootState) => state.sensor.avg24h);
+  const avg7d = useAppSelector((state: RootState) => state.sensor.avg7d);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View>
-        <Text>Welcome to the Home Screen!</Text>
-        <Text>Authentication Status: {isAuthenticated ? "Logged In" : "Logged Out"}</Text>
-        {isAuthenticated && <Text>Welcome, {user?.displayName}</Text>}
+      <View style={{ padding: 20 }}>
+        <Text style={{ fontSize: 28, marginBottom: 10 }}>{`Welcome, ${user?.displayName}`}</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')}>
+          <Text style={{ fontSize: 20 }}>24h Average: {avg24h}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')}>
+          <Text style={{ fontSize: 20 }}>7d Average: {avg7d}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

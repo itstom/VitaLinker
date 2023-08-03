@@ -6,55 +6,55 @@ import lightLogo from '../assets/lightLogo.png';
 const fontConfig = {
   web: {
     regular: {
-      fontFamily: 'sans-serif',
+      fontFamily: 'acumin-pro-reg',
       fontWeight: 'normal',
     },
     medium: {
-      fontFamily: 'sans-serif-medium',
+      fontFamily: 'acumin-pro-medium',
       fontWeight: 'normal',
     },
     light: {
-      fontFamily: 'sans-serif-light',
+      fontFamily: 'acumin-pro-light',
       fontWeight: 'normal',
     },
     thin: {
-      fontFamily: 'sans-serif-thin',
+      fontFamily: 'acumin-pro-thin',
       fontWeight: 'normal',
     },
   },
   ios: {
     regular: {
-      fontFamily: 'sans-serif',
+      fontFamily: 'acumin-pro-reg',
       fontWeight: 'normal',
     },
     medium: {
-      fontFamily: 'sans-serif-medium',
+      fontFamily: 'acumin-pro-medium',
       fontWeight: 'normal',
     },
     light: {
-      fontFamily: 'sans-serif-light',
+      fontFamily: 'acumin-pro-light',
       fontWeight: 'normal',
     },
     thin: {
-      fontFamily: 'sans-serif-thin',
+      fontFamily: 'acumin-pro-thin',
       fontWeight: 'normal',
     },
   },
   android: {
     regular: {
-      fontFamily: 'sans-serif',
+      fontFamily: 'acumin-pro-reg',
       fontWeight: 'normal',
     },
     medium: {
-      fontFamily: 'sans-serif-medium',
+      fontFamily: 'acumin-pro-medium',
       fontWeight: 'normal',
     },
     light: {
-      fontFamily: 'sans-serif-light',
+      fontFamily: 'acumin-pro-light',
       fontWeight: 'normal',
     },
     thin: {
-      fontFamily: 'sans-serif-thin',
+      fontFamily: 'acumin-pro-thin',
       fontWeight: 'normal',
     },
   }

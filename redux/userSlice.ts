@@ -1,5 +1,5 @@
 // userSlice.ts
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAction, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '../types/types'
 import { AppThunk } from './store'
 import auth from '@react-native-firebase/auth';
@@ -10,7 +10,13 @@ export interface UserState {
   isAuthenticated: boolean;
   isEmailVerified: boolean;
   isLoading: boolean;
+  isPhoneVerified: boolean;
   error: any;
+  phoneAuth: {
+    isFetching: boolean;
+    confirmationResult: string;
+    error: any;
+  }
 }
 
 const initialState: UserState = {
@@ -18,7 +24,13 @@ const initialState: UserState = {
   isAuthenticated: false,
   isEmailVerified: false,
   isLoading: false,
+  isPhoneVerified: false,
   error: null,
+  phoneAuth: {
+    isFetching: false,
+    confirmationResult: '',
+    error: null,
+  }
 };
 
 export const userSlice = createSlice({
@@ -41,6 +53,21 @@ export const userSlice = createSlice({
       state.isLoading = false;
       state.error = action.payload;
     },
+    phoneLoginRequest: (state, action: PayloadAction<string>) => {
+      state.phoneAuth.isFetching = true;
+      state.phoneAuth.confirmationResult = '';
+      state.phoneAuth.error = null;
+    },
+    phoneLoginSuccess: (state, action: PayloadAction<string>) => {
+      state.phoneAuth.isFetching = false;
+      state.phoneAuth.confirmationResult = action.payload;
+      state.phoneAuth.error = null;
+    },
+    phoneLoginFailure: (state, action: PayloadAction<any>) => {
+      state.phoneAuth.isFetching = false;
+      state.phoneAuth.confirmationResult = '';
+      state.phoneAuth.error = action.payload;
+    },
     logoutSuccess: (state) => {
       state.currentUser = null;
       state.isAuthenticated = false;
@@ -60,10 +87,14 @@ export const userSlice = createSlice({
     setSignupFailure: (state, action: PayloadAction<any>) => {
       state.error = action.payload;
     },
+    setPhoneVerificationStatus: (state, action: PayloadAction<boolean>) => {
+      state.isPhoneVerified = action.payload;
+    },
+
   },
 });
 
-export const { setLoading, setError, loginFailure, logoutSuccess, logoutFailure, setEmailVerified } = userSlice.actions;
+export const { setLoading, setError, loginFailure, logoutSuccess, logoutFailure, setEmailVerified, phoneLoginRequest, phoneLoginSuccess, phoneLoginFailure, setPhoneVerificationStatus } = userSlice.actions;
 
 export const userLogin = (email: string, password: string): AppThunk => async dispatch => {
   dispatch(setLoading(true));

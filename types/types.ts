@@ -1,6 +1,9 @@
 // types.ts
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, ParamListBase } from '@react-navigation/native';
+import { SAVE_CONFIRMATION_RESULT } from '../redux/actions/authActions';
+import auth from '@react-native-firebase/auth';
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
 export interface User {
   uid: string;
@@ -31,6 +34,11 @@ export type MainStackParamList = {
   Settings: undefined; // No parameters expected
   ResetPassword: undefined; // No parameters expected
 };
+
+export interface SaveConfirmationResultAction {
+  type: typeof SAVE_CONFIRMATION_RESULT;
+  payload: FirebaseAuthTypes.ConfirmationResult;
+}
 
 export type NavigationProps<ParamList extends ParamListBase, RouteName extends keyof ParamList> = {
     navigation: StackNavigationProp<ParamList, RouteName>;

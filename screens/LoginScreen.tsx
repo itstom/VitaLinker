@@ -16,11 +16,14 @@ import { firebase } from '@react-native-firebase/auth';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AppTheme } from '../design/themes';
-
+import { loginUserWithPhone, confirmSmsCode } from '../redux/actions/authActions';
+import { RootState } from '../redux/store';
+import { setPhoneVerificationStatus } from '../redux/userSlice';
 
 const emailRegExp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
 const passwordRegExp = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
 const authService = AuthService();
+const settings = firebase.auth().settings;
 
 interface LoginScreenProps {
   username?: string;
@@ -51,6 +54,7 @@ const useLogin = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
@@ -94,19 +98,17 @@ const useLogin = () => {
       }
     }
   };
-  
+      useEffect(() => {
+          setIsLoginDisabled(!(emailRegExp.test(email) && passwordRegExp.test(password)));
+        }, [email, password]);
 
-useEffect(() => {
-    setIsLoginDisabled(!(emailRegExp.test(email) && passwordRegExp.test(password)));
-  }, [email, password]);
-
-  const validateEmailAndPassword = (email: string, password: string) => {
-    if (email.trim() === "" || password.trim() === "") {
-      return false;
-    }
-    
-    return true;
-  };
+        const validateEmailAndPassword = (email: string, password: string) => {
+          if (email.trim() === "" || password.trim() === "") {
+            return false;
+          }
+          
+          return true;
+        };
 
     const handleLogin = async () => {
     setLoading(true);
@@ -123,19 +125,16 @@ useEffect(() => {
       setLoading(false);
       return;
     }
-  
     try {
       const firebaseUser = await authService.signIn(email, password);
   
       if (!firebaseUser || !firebaseUser.email) {
         throw new Error('No email associated with this user');
       }
-      
       const user: SimpleUser = {
         uid: firebaseUser.uid,
         email: firebaseUser.email
       };
-  
       try {
         await dispatch(loginSuccess(user));
       } catch (err) {
@@ -165,8 +164,7 @@ useEffect(() => {
           break;
         default:
           errorMessage = 'Login failed. Please try again later.';
-      }
-    
+      } 
       Toast.show({
         type: 'error',
         position: 'top',
@@ -177,70 +175,57 @@ useEffect(() => {
         topOffset: 30,
         bottomOffset: 40
       });
-    
       setLoading(false);
     }
 };
 
 const handlePhoneNumberLogin = async () => {
-  // Filter only numbers from the input
   let cleaned = ('' + phoneNumber).replace(/\D/g, '');
-
-  // Prepend country code if missing. Here we are using +1 for US. Change accordingly.
   if (!cleaned.startsWith("1")) {
     cleaned = "1" + cleaned;
   }
   cleaned = "+" + cleaned;
-
-  // Check if the input is empty or not numeric
   if (!cleaned || isNaN(Number(cleaned))) {
     Alert.alert('Error', 'Please enter a valid phone number');
     return;
   }
-
   setIsPhoneVerifying(true);
 
-  try {
-    const confirmation: FirebaseAuthTypes.ConfirmationResult = await auth().signInWithPhoneNumber(cleaned);
+  auth().settings.forceRecaptchaFlowForTesting = true;
 
-    setConfirmResult(confirmation);
-  } catch (error: any) {
-    console.log(error);
-    Toast.show({
-      type: 'error',
-      position: 'top',
-      text1: 'Phone number login error',
-      text2: error.message,
-      visibilityTime: 4000,
-      autoHide: true,
-      topOffset: 30,
-      bottomOffset: 40
-    });
-    setIsPhoneVerifying(false);
-  }
-};
-
-const confirmVerificationCode = async (verificationCode: string) => {
-  if (!confirmResult) {
-    console.error('No confirmation result available');
-    return;
-  }
-
-  try {
-    await confirmResult.confirm(verificationCode);
-  } catch (error) {
-    console.error('Confirmation error', error);
+  // Mock SMS verification for testing
+  if (__DEV__) { // if the app is running in a development environment
+    auth().settings.appVerificationDisabledForTesting = true;
+    try {
+      const confirmationResult = await auth().signInWithPhoneNumber(cleaned, true);
+      setConfirmResult(confirmationResult); 
+      dispatch(loginUserWithPhone(cleaned)); 
+    } catch (error: any) {
+      console.log(error);
+      setIsPhoneVerifying(false);
+    }
+    auth().settings.appVerificationDisabledForTesting = false;
+  } else {
+    // your production sign-in logic
+    try {
+      const confirmationResult = await auth().signInWithPhoneNumber(cleaned);
+      setConfirmResult(confirmationResult);
+      dispatch(loginUserWithPhone(cleaned));
+    } catch (error: any) {
+      console.log(error);
+      setIsPhoneVerifying(false);
+    }
   }
 };
 
 const handleVerifyCode = async () => {
-  if (verificationCode.length <= 0) {
+  if (verificationCode.length !== 6) {
+    console.log('Invalid code');
     Toast.show({
       type: 'error',
       position: 'top',
-      text1: 'Phone number login error',
-      text2: 'Verification code cannot be empty',
-      visibilityTime: 4000,
+      text1: 'Invalid code',
+      visibilityTime: 3000,
       autoHide: true,
       topOffset: 30,
       bottomOffset: 40
@@ -248,27 +233,25 @@ const handleVerifyCode = async () => {
     return;
   }
   try {
+    console.log('Confirm result:', confirmResult);
+    console.log('Verification code:', verificationCode);
     if(confirmResult) {
-      const credential = auth.PhoneAuthProvider.credential(confirmResult.verificationId, verificationCode);
-      const userCredential = await auth().signInWithCredential(credential);
-      const user: SimpleUser = {
-        uid: userCredential.user.uid,
-        email: userCredential.user.email || '',
-      };
-      dispatch(loginSuccess(user));
+      // Confirm the SMS code using the local state confirmationResult
+      const userCredential = await confirmResult.confirm(verificationCode);
+      console.log("User Credential: ", userCredential); 
+      if(userCredential && userCredential.user) {
+        const user: SimpleUser = {
+          uid: userCredential.user.uid,
+          email: userCredential.user.email || '',
+        };
+        console.log("User: ", user);
+        dispatch(loginSuccess(user)); // Dispatch action to store the logged in user
+        dispatch(setPhoneVerificationStatus(true)); // Dispatch action to store that phone number is verified
+      }
     }
   } catch (error: any) {
-    console.log(error);
-    Toast.show({
-      type: 'error',
-      position: 'top',
-      text1: 'Phone number login error',
-      text2: 'Verification code is invalid',
-      visibilityTime: 4000,
-      autoHide: true,
-      topOffset: 30,
-      bottomOffset: 40
-    });
+    console.log("Error: ", error);
+    dispatch(setPhoneVerificationStatus(false)); // Dispatch action to store that phone number is not verified
   }
 };
 
@@ -276,7 +259,7 @@ const handleCancelVerification = () => {
   setIsPhoneVerifying(false);
   setConfirmResult(null);
   setVerificationCode("");
-
+  dispatch(setPhoneVerificationStatus(false));
 };
 
   return {
@@ -346,9 +329,6 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
     dispatch(toggleTheme());
   }, [dispatch]);
 
-  const handleFormattedPhoneNumber = (input: string) => {
-    handlePhoneNumberChange(input);
-  };  
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
