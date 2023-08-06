@@ -11,8 +11,8 @@ const SplashScreen = () => {
       backgroundColor: '#fff',
     },
     image: {
-      width: Dimensions.get('window').width, 
-      height: Dimensions.get('window').height,
+      width: 300, 
+      height: 300,
     }
   });
 

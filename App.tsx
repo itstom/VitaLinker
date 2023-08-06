@@ -1,13 +1,11 @@
 // App.tsx
 import React, { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
-import { loadTheme } from './redux/themeSlice';
+import { loadTheme, mapTheme } from './redux/themeSlice';
 import { store, RootState, useAppDispatch, useAppSelector } from './redux/store';
 import { Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { Provider as PaperProvider } from 'react-native-paper';
-import { ThunkDispatch } from 'redux-thunk';
-import { AnyAction } from 'redux';
 import MainNavigator from './navigation/MainNavigator';
 import SplashScreen from './screens/SplashScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,7 +18,7 @@ const SPLASH_DISPLAY_INTERVAL = 1000 * 60 * 30;
 
 const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
   const [showSplash, setShowSplash] = useState(false);
-  const dispatch: ThunkDispatch<RootState, any, AnyAction> = useAppDispatch();
+  const dispatch = useAppDispatch();
   const theme = useAppSelector((state) => state.theme.current);
 
   useEffect(() => {
@@ -30,7 +28,7 @@ const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
       const lastOpened = await AsyncStorage.getItem('lastOpenedApp');
       if (!lastOpened || (Date.now() - parseInt(lastOpened) > SPLASH_DISPLAY_INTERVAL)) {
         setShowSplash(true);
-        setTimeout(() => setShowSplash(false), 3000);
+        setTimeout(() => setShowSplash(false), 4000);
       }
       await AsyncStorage.setItem('lastOpenedApp', Date.now().toString());
     };
@@ -52,8 +50,8 @@ const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
   return (
     <Provider store={store}>
       <PaperProvider theme={theme}>
-        <NavigationContainer>
-          <MainNavigator /> 
+        <NavigationContainer theme={mapTheme(theme)}>
+          <MainNavigator />
         </NavigationContainer>
       </PaperProvider>
     </Provider>

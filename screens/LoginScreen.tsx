@@ -15,10 +15,11 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { setPhoneVerificationStatus, userLoginWithPhone } from '../redux/userSlice';
 import { useAuthService } from '../services/AuthService';
 import { useSelector } from 'react-redux';
-import ButtonStyles from '../design/styles';
+import getStyles from '../design/styles';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 type LoginScreenParams = {
   Login?: {
@@ -46,7 +47,7 @@ const useLogin = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const { signIn} = useAuthService();
-
+  const theme = useSelector((state: RootState) => state.theme.current);
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
@@ -308,6 +309,7 @@ const handleCancelVerification = () => {
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) => { 
   const theme = useSelector((state: RootState) => state.theme.current);
+  const themedStyles = getStyles(theme);
   const logo = theme.logo;
   const dispatch: ThunkDispatch<RootState, any, AnyAction> = useAppDispatch(); 
   const { email, password } = (route.params as unknown as LoginScreenParams)?.Login || {};
@@ -342,126 +344,119 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) => {
     dispatch(toggleTheme());
   }, [dispatch]);
 
-/*   const handleMockLogin = () => {
-    console.log('Mock login');
-    // Call the navigation.navigate function to navigate to the HomeScreen
-    navigation.navigate('MainApp');
-
-  }; */
-
-  return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <TouchableOpacity onPress={onToggleTheme} style={styles.themeToggle}>
+  const ThemeButton = (
+    <TouchableOpacity onPress={onToggleTheme} style={getStyles(theme).themeToggle}>
         <Image 
-          source={theme.dark 
-            ? require('../assets/sun.png')
-            : require('../assets/moon.png')
-          }
-          style={{ width: 30, height: 30 }}
-          onLoad={() => console.log('Image loaded')}
-          onError={(error) => console.log('Error loading image:', error)}
+            source={theme.dark ? require('../assets/sun.png') : require('../assets/moon.png')}
+            style={{ width: 30, height: 30 }}
+            onLoad={() => console.log('Image loaded')}
+            onError={(error) => console.log('Error loading image:', error)}
         />
-      </TouchableOpacity>
-      {loading && <ActivityIndicator animating={true} />}
-      {!loading && (
-        <>
-          <Image 
+    </TouchableOpacity>
+);
+
+const LoadingIndicator = (
+    <View style={getStyles(theme).overlayStyle}>
+        <ActivityIndicator size={'large'} color='#0000ff' animating={true} />
+    </View>
+);
+
+const LoginFormComponents = (
+    <>
+        <Image 
             source={logo}
             resizeMode="contain"
             style={{ alignSelf: 'center', marginBottom: 20, width: '100%', height: 150 }}
-          />
-          <TextInput
+        />
+        <TextInput
             label="Email"
             value={email}
             onChangeText={setEmail}
-            style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
-          />
-          <TextInput
+            mode="outlined"
+            style={[themedStyles.input,{backgroundColor: theme.colors.background}]}
+        />
+            <TextInput
             label="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!isPasswordVisible}
-            style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
+            mode="outlined"
+            style={[themedStyles.input, {marginBottom: 10, backgroundColor: theme.colors.background }]}
             right={
-              <TouchableOpacity onPress={togglePasswordVisibility} style={{ justifyContent: 'center', marginRight: 10 }}>
-                <Icon 
-                  name={isPasswordVisible ? 'eye-off' : 'eye'}
-                  size={50} 
-                  color={theme.colors.background}
+           <TextInput.Icon 
+            icon={() => 
+                <FontAwesome 
+                    name={isPasswordVisible ? 'eye-slash' : 'eye'} 
+                    size={20}
+                    color={theme.colors.text}
                 />
-              </TouchableOpacity>
-            } 
-          />
-           <TextInput
-                label="Phone Number"
-                value={formattedPhoneNumber}
-                onChangeText={handlePhoneNumberChange}
-                onSubmitEditing={handlePhoneNumberLogin}
-                keyboardType="phone-pad"
-                style={{ marginBottom: 15, backgroundColor: theme.colors.background }}
-              />
-          <Button mode="contained" 
+            }
+            onPress={togglePasswordVisibility}
+        />
+    } 
+/>
+
+        <TextInput
+            label="Phone Number"
+            value={formattedPhoneNumber}
+            onChangeText={handlePhoneNumberChange}
+            onSubmitEditing={handlePhoneNumberLogin}
+            mode="outlined"
+            keyboardType="phone-pad"
+            style={[themedStyles.input, {marginBottom: 15, backgroundColor: theme.colors.background }]}
+        />
+        <Button mode="contained" 
             onPress={handleLogin} 
-            style={[ButtonStyles.roundedButton, { marginBottom: 10 }]}
+            style={[getStyles(theme).roundedButton, { marginBottom: 10 }]}
             disabled={isLoginDisabled}
-          >
+        >
             Login
-          </Button>
-          {isPhoneVerifying ? (
-            <>
-              <TextInput
-                label="Verification Code"
-                value={verificationCode}
-                onChangeText={setVerificationCode}
-                keyboardType='numeric'
-                style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
-              />
-              <Button mode="contained" 
-                onPress={handleVerifyCode} 
-                style={[ButtonStyles.roundedButton, { marginBottom: 10 }]}
-              >
-                Validate
-              </Button>
-              <Button mode="text" 
-                onPress={handleCancelVerification} 
-                style={[ButtonStyles.roundedButton, { marginBottom: 10 }]}
-              >
-                Cancel Verification
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                mode="text"
-                onPress={() => navigation.navigate('ResetPassword')}
-              >
-                Forgot Password?
-              </Button>
+        </Button>
+    </>
+);
 
-              <Button
-                mode="text"
-                onPress={() => navigation.navigate('Register')}
-              >
-                Create a New Account
-              </Button>
+const PhoneVerificationComponents = (
+    <>
+        <TextInput
+            label="Verification Code"
+            value={verificationCode}
+            onChangeText={setVerificationCode}
+            keyboardType='numeric'
+            style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
+        />
+        <Button mode="contained" 
+            onPress={handleVerifyCode} 
+            style={[getStyles(theme).roundedButton, { marginBottom: 10 }]}
+        >
+            Validate
+        </Button>
+        <Button mode="text" 
+            onPress={handleCancelVerification} 
+            style={[getStyles(theme).roundedButton, { marginBottom: 10 }]}
+        >
+            Cancel Verification
+        </Button>
+    </>
+);
+
+const AdditionalButtons = (
+    <>
+        <Button mode="text" onPress={() => navigation.navigate('ResetPassword')}>Forgot Password?</Button>
+        <Button mode="text" onPress={() => navigation.navigate('Register')}>Create a New Account</Button>
+    </>
+);
+
+return (
+    <View style={[getStyles(theme).containerStyle, { backgroundColor: theme.colors.background }]}>
+        {ThemeButton}
+        {loading ? LoadingIndicator : (
+            <>
+                {LoginFormComponents}
+                {isPhoneVerifying ? PhoneVerificationComponents : AdditionalButtons}
             </>
-          )}
-        </>
-      )}
+        )}
     </View>
-  );
-};
-export default LoginScreen;
+);
+        }
 
-const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    paddingHorizontal: 16 
-  },
-  themeToggle: { 
-    position: 'absolute', 
-    top: 20, 
-    right: 20 
-  },
-});
+export default LoginScreen;

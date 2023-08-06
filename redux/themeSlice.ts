@@ -66,8 +66,8 @@ const mapTheme = (theme: AppTheme): typeof DefaultTheme => {
       background: theme.colors.background,
       card: theme.colors.surface,
       text: theme.colors.text,
-      border: theme.colors.surface,
-      notification: theme.colors.notification,
+      border: theme.colors.placeholder,
+      notification: theme.colors.onPrimary,
     }
   };
 };
