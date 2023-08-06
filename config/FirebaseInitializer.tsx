@@ -1,7 +1,7 @@
-//config/FirebaseInitializer.tsx
+// config/FirebaseInitializer.tsx
 import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
-import { initializeFirebase } from './firebase'
+import { initializeFirebase } from './firebase';
 import App from '../App';
 import { ActivityIndicator } from 'react-native-paper';
 
@@ -24,19 +24,20 @@ const FirebaseInitializer = () => {
   if (!isFirebaseInitialized) {
     if (initializationError) {
       return (
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text>Failed to initialize Firebase. Please check your network connection and restart the app.</Text>
         </View>
       );
-    } 
+    }
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator animating={true} size='large' />
       </View>
     );
   }
 
-  return <App />;
+  return <App isFirebaseInitialized={isFirebaseInitialized} />;
 };
 
 export default FirebaseInitializer;
+

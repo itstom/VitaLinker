@@ -1,11 +1,11 @@
-//ForgotPassword.tsx
+//screens/ResetPassword.tsx
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { TextInput, Button, Title, Snackbar } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
 import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import { AppDispatch, RootState } from '../redux/store';
-import { resetPasswordSuccess, resetPasswordError } from '../redux/actions/userActions';
+import { resetPasswordSuccess, resetPasswordFailed } from '../redux/actions/authActions';
 
 const ResetPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -33,7 +33,7 @@ const ResetPasswordScreen: React.FC = () => {
         if (error && typeof error.message === 'string') {
             errorMessage = error.message;
         }
-        dispatch(resetPasswordError(errorMessage));
+        dispatch(resetPasswordFailed(errorMessage));
     } finally {
         setIsLoading(false);
     }

@@ -76,8 +76,10 @@ export const lightTheme = {
     onSecondaryContainer: "rgb(151, 240, 255)", // color for content on the secondary container
     surface: 'black', // color for the surfaces of components
     background: "rgb(246, 246, 252)", // color for the background of your app
-    placeholder: "rgb(231, 231, 241)", // Input fields
-    text: "rgb(105, 124, 141)", // Color for Words
+    placeholder: "rgb(0, 27, 23)", // Input fields
+    text: "rgb(0, 27, 23)", // Color for Words
+
+  
   },
   logo: lightLogo,
 };
@@ -97,7 +99,7 @@ export const darkTheme = {
     onSecondaryContainer: "rgb(151, 240, 255)", // color for content on the secondary container
     surface: 'black', // color for the surfaces of components
     background: "rgb(13, 24, 33)", // color for the background of your app
-    placeholder: "rgb(29, 43, 55)", // Input fields
+    placeholder: "rgb(168, 203, 225)", // Input fields
     text: "rgb(105, 124, 141)", // Color for Words
   },
   logo: darkLogo,

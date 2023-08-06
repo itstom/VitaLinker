@@ -1,45 +1,37 @@
 // LoginScreen.tsx
-import React, { Dispatch, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Button, TextInput, Text, ActivityIndicator, useTheme } from 'react-native-paper';
-import { AuthStackNavigationProp } from '../types/types';
-import { useNavigation } from '@react-navigation/native';
+import { Button, TextInput, ActivityIndicator } from 'react-native-paper';
+import { GuestStackNavigationProp, LoginScreenProps } from '../types/types';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import { loginSuccess } from '../redux/actions/authActions';
-import AuthService from '../services/AuthService';
 import { SimpleUser } from '../redux/actions/authActions';
 import { Image } from 'react-native';
-import { useAppDispatch, useAppSelector } from '../redux/store';
+import { RootState, useAppDispatch } from '../redux/store';
 import { toggleTheme  } from '../redux/themeSlice';
 import Toast from 'react-native-toast-message';
-import { PhoneAuthProvider } from 'firebase/auth';
-import { firebase } from '@react-native-firebase/auth';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { AppTheme } from '../design/themes';
-import { loginUserWithPhone, confirmSmsCode } from '../redux/actions/authActions';
-import { RootState } from '../redux/store';
-import { setPhoneVerificationStatus } from '../redux/userSlice';
+import { setPhoneVerificationStatus, userLoginWithPhone } from '../redux/userSlice';
+import { useAuthService } from '../services/AuthService';
+import { useSelector } from 'react-redux';
+import ButtonStyles from '../design/styles';
+import { ThunkDispatch } from 'redux-thunk';
+import { AnyAction } from 'redux';
+
+
+type LoginScreenParams = {
+  Login?: {
+    email: string;
+    password: string;
+  };
+};
 
 const emailRegExp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
 const passwordRegExp = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
-const authService = AuthService();
-const settings = firebase.auth().settings;
-
-interface LoginScreenProps {
-  username?: string;
-  password?: string;
-  onLogin?: (username: string, password: string) => void;
-  phoneNumber?: string;
-  formattedPhoneNumber?: string;
-  rawPhoneNumber?: string;
-  loading?: boolean;
-  handleLogin: () => Promise<void>;
-  handlePhoneNumberLogin: () => Dispatch<any>;
-  isPasswordVisible?: boolean;
-  togglePasswordVisibility: () => void;
-}
 
 const useLogin = () => {
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('+1-');
@@ -52,8 +44,8 @@ const useLogin = () => {
   const [isPhoneLogin, setIsPhoneLogin] = useState(false);
   const [isPhoneVerifying, setIsPhoneVerifying] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const { signIn} = useAuthService();
 
 
   const togglePasswordVisibility = () => {
@@ -110,113 +102,136 @@ const useLogin = () => {
           return true;
         };
 
-    const handleLogin = async () => {
-    setLoading(true);
-    if (!validateEmailAndPassword(email, password)) {
-      Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Invalid credentials',
-        visibilityTime: 4000,
-        autoHide: true,
-        topOffset: 30,
-        bottomOffset: 40
-      });
-      setLoading(false);
-      return;
-    }
-    try {
-      const firebaseUser = await authService.signIn(email, password);
-  
-      if (!firebaseUser || !firebaseUser.email) {
-        throw new Error('No email associated with this user');
-      }
-      const user: SimpleUser = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email
-      };
-      try {
-        await dispatch(loginSuccess(user));
-      } catch (err) {
-        console.error('Error dispatching login success:', err);
-        Toast.show({
-          type: 'error',
-          position: 'top',
-          text1: 'Login Error',
-          text2: 'Error occurred while processing login.',
-          visibilityTime: 4000,
-          autoHide: true,
-          topOffset: 30,
-          bottomOffset: 40
-        });
-      }
-    } catch (error: any) {
-      let errorMessage;
-      switch(error.code) {
-        case 'auth/wrong-password':
-          errorMessage = 'The password is invalid';
-          break;
-        case 'auth/user-not-found':
-          errorMessage = 'No account found with this email';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many login attempts. Please try again later.';
-          break;
-        default:
-          errorMessage = 'Login failed. Please try again later.';
-      } 
-      Toast.show({
-        type: 'error',
-        position: 'top',
-        text1: 'Login Error',
-        text2: errorMessage,
-        visibilityTime: 4000,
-        autoHide: true,
-        topOffset: 30,
-        bottomOffset: 40
-      });
-      setLoading(false);
-    }
-};
+        const handleLogin = async () => {
+          setLoading(true);
+          if (!validateEmailAndPassword(email, password)) {
+            Toast.show({
+              type: 'error',
+              position: 'bottom',
+              text1: 'Invalid credentials',
+              visibilityTime: 4000,
+              autoHide: true,
+              topOffset: 30,
+              bottomOffset: 40
+            });
+            setLoading(false);
+            return;
+          }
+          try {
+            const firebaseUser = await signIn(email, password);
+          
+            if (!firebaseUser || !firebaseUser.email) {
+              throw new Error('No email associated with this user');
+            }
+            const user: SimpleUser = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email
+            };
+            try {
+              await dispatch(loginSuccess(user));
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'Home' }],
+                })
+              );
+            } catch (err) {
+              console.error('Error dispatching login success:', err);
+              Toast.show({
+                type: 'error',
+                position: 'top',
+                text1: 'Login Error',
+                text2: 'Error occurred while processing login.',
+                visibilityTime: 4000,
+                autoHide: true,
+                topOffset: 30,
+                bottomOffset: 40
+              });
+            }
+          } catch (error: any) {
+            let errorMessage;
+            switch(error.code) {
+              case 'auth/wrong-password':
+                errorMessage = 'The password is invalid';
+                break;
+              case 'auth/user-not-found':
+                errorMessage = 'No account found with this email';
+                break;
+              case 'auth/too-many-requests':
+                errorMessage = 'Too many login attempts. Please try again later.';
+                break;
+              default:
+                errorMessage = 'Login failed. Please try again later.';
+            } 
+            Toast.show({
+              type: 'error',
+              position: 'top',
+              text1: 'Login Error',
+              text2: errorMessage,
+              visibilityTime: 4000,
+              autoHide: true,
+              topOffset: 30,
+              bottomOffset: 40
+            });
+            setLoading(false);
+          }
+        };        
 
-const handlePhoneNumberLogin = async () => {
-  let cleaned = ('' + phoneNumber).replace(/\D/g, '');
-  if (!cleaned.startsWith("1")) {
-    cleaned = "1" + cleaned;
-  }
-  cleaned = "+" + cleaned;
-  if (!cleaned || isNaN(Number(cleaned))) {
-    Alert.alert('Error', 'Please enter a valid phone number');
-    return;
-  }
-  setIsPhoneVerifying(true);
-
-  auth().settings.forceRecaptchaFlowForTesting = true;
-
-  // Mock SMS verification for testing
-  if (__DEV__) { // if the app is running in a development environment
-    auth().settings.appVerificationDisabledForTesting = true;
-    try {
-      const confirmationResult = await auth().signInWithPhoneNumber(cleaned, true);
-      setConfirmResult(confirmationResult); 
-      dispatch(loginUserWithPhone(cleaned)); 
-    } catch (error: any) {
-      console.log(error);
-      setIsPhoneVerifying(false);
-    }
-    auth().settings.appVerificationDisabledForTesting = false;
-  } else {
-    // your production sign-in logic
-    try {
-      const confirmationResult = await auth().signInWithPhoneNumber(cleaned);
-      setConfirmResult(confirmationResult);
-      dispatch(loginUserWithPhone(cleaned));
-    } catch (error: any) {
-      console.log(error);
-      setIsPhoneVerifying(false);
-    }
-  }
-};
+        const handlePhoneNumberLogin = async () => {
+          let cleaned = ('' + phoneNumber).replace(/\D/g, '');
+          if (!cleaned.startsWith("1")) {
+              cleaned = "1" + cleaned;
+          }
+          cleaned = "+" + cleaned;
+          if (!cleaned || isNaN(Number(cleaned))) {
+              Alert.alert('Error', 'Please enter a valid phone number');
+              return;
+          }
+          setIsPhoneVerifying(true);
+        
+          auth().settings.forceRecaptchaFlowForTesting = true;
+        
+          // Mock SMS verification for testing
+          if (__DEV__) {
+              auth().settings.appVerificationDisabledForTesting = true;
+              try {
+                  const confirmationResult = await auth().signInWithPhoneNumber(cleaned, true);
+                  setConfirmResult(confirmationResult);
+                  // Dispatch the action here, but handle the promise returned by the async thunk
+                  dispatch(userLoginWithPhone(cleaned))
+                      .then(() => {
+                          // Handle the success case here if needed
+                          console.log('Phone login success');
+                      })
+                      .catch((error: any) => {
+                          // Handle any errors here
+                          console.log('Phone login failed:', error);
+                      });
+              } catch (error: any) {
+                  console.log(error);
+                  setIsPhoneVerifying(false);
+              }
+              auth().settings.appVerificationDisabledForTesting = false;
+          } else {
+              try {
+                  const confirmationResult = await auth().signInWithPhoneNumber(cleaned);
+                  setConfirmResult(confirmationResult);
+                  // Dispatch the action here, but handle the promise returned by the async thunk
+                  dispatch(userLoginWithPhone(cleaned))
+                      .then(() => {
+                          // Handle the success case here if needed
+                          console.log('Phone login success');
+                      })
+                      .catch((error: any) => {
+                          // Handle any errors here
+                          console.log('Phone login failed:', error);
+                      });
+              } catch (error: any) {
+                  console.log(error);
+                  setIsPhoneVerifying(false);
+              }
+          }
+      };      
 
 const handleVerifyCode = async () => {
   if (verificationCode.length !== 6) {
@@ -291,13 +306,12 @@ const handleCancelVerification = () => {
   };
 };
 
-const LoginScreen: React.FC<LoginScreenProps> = () => {
-  const theme = useTheme() as AppTheme;
+const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) => { 
+  const theme = useSelector((state: RootState) => state.theme.current);
   const logo = theme.logo;
-  const navigation = useNavigation<AuthStackNavigationProp<'Login'>>();
+  const dispatch: ThunkDispatch<RootState, any, AnyAction> = useAppDispatch(); 
+  const { email, password } = (route.params as unknown as LoginScreenParams)?.Login || {};
   const { 
-    email,
-    password,
     phoneNumber,
     rawPhoneNumber,
     loading,
@@ -322,103 +336,121 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
     togglePasswordVisibility,
   } = useLogin();
 
-  const isDarkTheme = useAppSelector((state) => state.theme.dark);
-  const dispatch = useAppDispatch();
+
 
   const onToggleTheme = useCallback(() => {
     dispatch(toggleTheme());
   }, [dispatch]);
 
+/*   const handleMockLogin = () => {
+    console.log('Mock login');
+    // Call the navigation.navigate function to navigate to the HomeScreen
+    navigation.navigate('MainApp');
+
+  }; */
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <TouchableOpacity onPress={onToggleTheme} style={styles.themeToggle}>
-            <Image 
-                source={theme.dark 
-                    ? require('../assets/sun.png')
-                    : require('../assets/moon.png') 
-                }
-                style={{ width: 30, height: 30 }}
-                onLoad={() => console.log('Image loaded')}
-                onError={(error) => console.log('Error loading image:', error)}
-            />
-        </TouchableOpacity>
-        {loading && <ActivityIndicator animating={true} />}
-        {!loading && (
-            <>
-                <Image 
-                    source={logo}
-                    resizeMode="contain"
-                    style={{ alignSelf: 'center', marginBottom: 20, width: '100%', height: 150 }}
+      <TouchableOpacity onPress={onToggleTheme} style={styles.themeToggle}>
+        <Image 
+          source={theme.dark 
+            ? require('../assets/sun.png')
+            : require('../assets/moon.png')
+          }
+          style={{ width: 30, height: 30 }}
+          onLoad={() => console.log('Image loaded')}
+          onError={(error) => console.log('Error loading image:', error)}
+        />
+      </TouchableOpacity>
+      {loading && <ActivityIndicator animating={true} />}
+      {!loading && (
+        <>
+          <Image 
+            source={logo}
+            resizeMode="contain"
+            style={{ alignSelf: 'center', marginBottom: 20, width: '100%', height: 150 }}
+          />
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
+          />
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!isPasswordVisible}
+            style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
+            right={
+              <TouchableOpacity onPress={togglePasswordVisibility} style={{ justifyContent: 'center', marginRight: 10 }}>
+                <Icon 
+                  name={isPasswordVisible ? 'eye-off' : 'eye'}
+                  size={50} 
+                  color={theme.colors.background}
                 />
-                {isPhoneVerifying ? (
-                    <>
-                        <TextInput
-                            label="Verification Code"
-                            value={verificationCode}
-                            onChangeText={setVerificationCode}
-                            keyboardType='numeric'
-                            style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
-                        />
-                        <Button mode="contained" onPress={handleVerifyCode} style={{ marginBottom: 10 }}>
-                            Validate
-                        </Button>
-                        <Button mode="text" onPress={handleCancelVerification} style={{ marginBottom: 10 }}>
-                            Cancel Verification
-                        </Button>
-                    </>
-                ) : (
-                    <>
-                        <TextInput
-                            label="Email"
-                            value={email}
-                            onChangeText={setEmail}
-                            style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
-                        />
-                        <TextInput
-                            label="Password"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry={!isPasswordVisible}
-                            style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
-                            right={
-                              <TouchableOpacity onPress={togglePasswordVisibility} style={{ justifyContent: 'center', marginRight: 10 }}>
-                                <Icon 
-                                  name={isPasswordVisible ? 'eye-off' : 'eye'}
-                                  size={50} 
-                                  color={theme.colors.background}
-                                />
-                              </TouchableOpacity>
-                            }
-                        />
-                        <Button mode="contained" onPress={handleLogin} style={{ marginBottom: 10 }} disabled={isLoginDisabled}>
-                            Login
-                        </Button>
-                        <TextInput
-                            label="Phone Number"
-                            value={formattedPhoneNumber}
-                            onChangeText={(text) => handlePhoneNumberChange(text)}
-                            onSubmitEditing={handlePhoneNumberLogin}
-                            keyboardType="phone-pad"
-                            style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
-                          />
-                        <Button mode="outlined" onPress={handlePhoneNumberLogin} style={{ marginBottom: 10 }}>
-                            Login with Phone Number
-                        </Button>
-                        <Button mode="text" onPress={() => navigation.navigate('ResetPassword')} style={{ marginBottom: 10 }}>
-                            Forgot Password?
-                        </Button>
-                        <Button mode="text" onPress={() => navigation.navigate('Register')}>
-                            Create a New Account
-                        </Button>
-                    </>
-                )}
+              </TouchableOpacity>
+            } 
+          />
+           <TextInput
+                label="Phone Number"
+                value={formattedPhoneNumber}
+                onChangeText={handlePhoneNumberChange}
+                onSubmitEditing={handlePhoneNumberLogin}
+                keyboardType="phone-pad"
+                style={{ marginBottom: 15, backgroundColor: theme.colors.background }}
+              />
+          <Button mode="contained" 
+            onPress={handleLogin} 
+            style={[ButtonStyles.roundedButton, { marginBottom: 10 }]}
+            disabled={isLoginDisabled}
+          >
+            Login
+          </Button>
+          {isPhoneVerifying ? (
+            <>
+              <TextInput
+                label="Verification Code"
+                value={verificationCode}
+                onChangeText={setVerificationCode}
+                keyboardType='numeric'
+                style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
+              />
+              <Button mode="contained" 
+                onPress={handleVerifyCode} 
+                style={[ButtonStyles.roundedButton, { marginBottom: 10 }]}
+              >
+                Validate
+              </Button>
+              <Button mode="text" 
+                onPress={handleCancelVerification} 
+                style={[ButtonStyles.roundedButton, { marginBottom: 10 }]}
+              >
+                Cancel Verification
+              </Button>
             </>
-        )}
+          ) : (
+            <>
+              <Button
+                mode="text"
+                onPress={() => navigation.navigate('ResetPassword')}
+              >
+                Forgot Password?
+              </Button>
+
+              <Button
+                mode="text"
+                onPress={() => navigation.navigate('Register')}
+              >
+                Create a New Account
+              </Button>
+            </>
+          )}
+        </>
+      )}
     </View>
   );
 };
-
 export default LoginScreen;
 
 const styles = StyleSheet.create({

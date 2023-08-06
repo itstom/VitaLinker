@@ -2,38 +2,69 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, ParamListBase } from '@react-navigation/native';
 import { SAVE_CONFIRMATION_RESULT } from '../redux/actions/authActions';
-import auth from '@react-native-firebase/auth';
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
-export interface User {
+export type User = {
   uid: string;
-  email: string;
-  displayName: string;
-  photoURL: string;
+  email: string | null;
+  displayName: string | null;
+  isEmailVerified: boolean;
+  isAnonymous: boolean;
+  phoneNumber: string | null;
+  photoURL: string | null;
 }
 
-// Define the list of screens in the Root stack navigator
-export type RootStackParamList = {
-    Auth: undefined;
-    Main: undefined;
-    App: undefined;
-  };
-
 // Define the list of screens in the Auth stack navigator
-export type AuthStackParamList = {
-  Login: undefined; // No parameters expected
-  Register: undefined; // No parameters expected
-  VerifyEmail: undefined; // No parameters expected
-  ResetPassword: undefined; // No parameters expected
+export type GuestStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  VerifyEmail: undefined;
+  ResetPassword: undefined;
 };
 
-// Define the list of screens in the Main stack navigator
-export type MainStackParamList = {
-  Home: undefined; // No parameters expected
-  Dashboard: undefined; // No parameters expected
-  Settings: undefined; // No parameters expected
-  ResetPassword: undefined; // No parameters expected
+export type UserStackParamList = {
+  Home: undefined;
+  Dashboard: undefined;
+  Settings: undefined;
+  ResetPassword: undefined;
 };
+
+export type LoginScreenProps = {
+  navigation: StackNavigationProp<GuestStackParamList, 'Login'>;
+  route: RouteProp<GuestStackParamList, 'Login'>;
+};
+
+export type RegisterScreenProps = {
+  navigation: StackNavigationProp<GuestStackParamList, 'Register'>;
+  route: RouteProp<GuestStackParamList, 'Register'>;
+};
+
+export type VerifyEmailScreenProps = {
+  navigation: StackNavigationProp<GuestStackParamList, 'VerifyEmail'>;
+  route: RouteProp<GuestStackParamList, 'VerifyEmail'>;
+};
+
+export type ResetPasswordScreenProps = {
+  navigation: StackNavigationProp<GuestStackParamList, 'ResetPassword'>;
+  route: RouteProp<GuestStackParamList, 'ResetPassword'>;
+};
+
+export type HomeScreenProps = {
+  navigation: StackNavigationProp<UserStackParamList, 'Home'>;
+  route: RouteProp<UserStackParamList, 'Home'>;
+};
+
+export type DashboardScreenProps = {
+  navigation: StackNavigationProp<UserStackParamList, 'Dashboard'>;
+  route: RouteProp<UserStackParamList, 'Dashboard'>;
+};
+
+export type SettingsScreenProps = {
+  navigation: StackNavigationProp<UserStackParamList, 'Settings'>;
+  route: RouteProp<UserStackParamList, 'Settings'>;
+};
+
+
 
 export interface SaveConfirmationResultAction {
   type: typeof SAVE_CONFIRMATION_RESULT;
@@ -43,19 +74,12 @@ export interface SaveConfirmationResultAction {
 export type NavigationProps<ParamList extends ParamListBase, RouteName extends keyof ParamList> = {
     navigation: StackNavigationProp<ParamList, RouteName>;
     route: RouteProp<ParamList, RouteName>;
-  };
+};
 
-// Create general types that can be used in all screens
-export type AuthStackNavigationProp<T extends keyof AuthStackParamList> = StackNavigationProp<
-  AuthStackParamList,
-  T
->;
+// For GuestStackParamList
+export type GuestStackNavigationProp<T extends keyof GuestStackParamList> = StackNavigationProp<GuestStackParamList, T>;
+export type GuestStackRouteProp<T extends keyof GuestStackParamList> = RouteProp<GuestStackParamList, T>;
 
-export type AuthStackRouteProp<T extends keyof AuthStackParamList> = RouteProp<AuthStackParamList, T>;
-
-export type MainStackNavigationProp<T extends keyof MainStackParamList> = StackNavigationProp<
-  MainStackParamList,
-  T
->;
-
-export type MainStackRouteProp<T extends keyof MainStackParamList> = RouteProp<MainStackParamList, T>;
+// For UserStackParamList
+export type UserStackNavigationProp<T extends keyof UserStackParamList> = StackNavigationProp<UserStackParamList, T>;
+export type UserStackRouteProp<T extends keyof UserStackParamList> = RouteProp<UserStackParamList, T>;

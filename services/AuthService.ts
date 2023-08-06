@@ -1,16 +1,32 @@
 // services/AuthService.ts
 import auth from '@react-native-firebase/auth';
-import { loginUserWithPhone } from '../redux/actions/authActions';
+import { useDispatch } from 'react-redux';
+import { loginSuccess, loginFailed } from '../redux/authSlice';
+import { useState } from 'react';
+import { User } from '../types/types'
 
-export default function AuthService() {
+export const useAuthService = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const dispatch = useDispatch();
 
   const signIn = async (email: string, password: string) => {
     try {
       const { user } = await auth().signInWithEmailAndPassword(email, password);
       console.log('User signed in:', user);
+      dispatch(loginSuccess(user));
+      setUser({
+        uid: user.uid,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        displayName: user.displayName,
+        isEmailVerified: user.emailVerified,
+        isAnonymous: user.isAnonymous,
+        photoURL: user.photoURL,
+      });
       return user;
     } catch (error) {
       console.error('Failed to sign in:', error);
+      dispatch(loginFailed());
       throw error;
     }
   };
@@ -58,6 +74,7 @@ export default function AuthService() {
   };
 
   return {
+    user,
     signIn,
     signInWithPhoneNumber,
     signOut,

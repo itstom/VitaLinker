@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
+//screens\HomeScreen.tsx
+import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useSelector } from 'react-redux';
 import { RootState, useAppSelector } from '../redux/store';
-import { MainStackNavigationProp, MainStackRouteProp } from '../types/types';
+import { HomeScreenProps, UserStackNavigationProp } from '../types/types';
+import { GuestNavigator, UserNavigator } from '../navigation/NavigationRoutes';
+import { useNavigation } from '@react-navigation/native';
 
-interface HomeScreenProps {
-  navigation: MainStackNavigationProp<'Home'>;
-  route: MainStackRouteProp<'Home'>;
-}
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ route }) => {
+  const navigation = useNavigation<UserStackNavigationProp<'Home'>>();
   const theme = useAppSelector((state: RootState) => state.theme.current);
   const isAuthenticated = useAppSelector((state: RootState) => state.auth.isAuthenticated);
   const user = useAppSelector((state: RootState) => state.auth.user);
@@ -19,7 +18,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 20 }}>
-        <Text style={{ fontSize: 28, marginBottom: 10 }}>{`Welcome, ${user?.displayName}`}</Text>
+        <Text style={{ fontSize: 28, marginBottom: 10 }}>{`Welcome, ${user ? user.displayName: "Guest"}`}</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Dashboard')}>
           <Text style={{ fontSize: 20 }}>24h Average: {avg24h}</Text>
         </TouchableOpacity>

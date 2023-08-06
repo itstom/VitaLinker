@@ -1,18 +1,17 @@
 //redux/authSlice.tsx
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User } from '@firebase/auth-types';
-import { ConfirmationResult } from 'firebase/auth';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+
+type User = FirebaseAuthTypes.User;
 
 export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
-  confirmationResult: ConfirmationResult | null;
 }
 
 const initialState: AuthState = {
   isAuthenticated: false,
   user: null,
-  confirmationResult: null,
 };
 
 const authSlice = createSlice({
@@ -27,12 +26,9 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
     },
-    saveConfirmationResult: (state, action: PayloadAction<ConfirmationResult>) => {
-      state.confirmationResult = action.payload;
-    },
   },
 });
 
-export const { loginSuccess, loginFailed, saveConfirmationResult } = authSlice.actions;
+export const { loginSuccess, loginFailed } = authSlice.actions;
 
 export default authSlice.reducer;
