@@ -1,25 +1,26 @@
 // LoginScreen.tsx
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, TouchableOpacity, View } from 'react-native';
 import { Button, TextInput, ActivityIndicator } from 'react-native-paper';
-import { GuestStackNavigationProp, LoginScreenProps } from '../types/types';
-import { CommonActions, useNavigation } from '@react-navigation/native';
-import { loginSuccess } from '../redux/actions/authActions';
-import { SimpleUser } from '../redux/actions/authActions';
+import { GuestStackNavigationProp, GuestStackParamList, GuestStackRouteProp, LoginScreenProps} from '../types/types';
+import { useNavigation } from '@react-navigation/native';
+
+import { SimpleUser } from '../redux/authSlice';
 import { Image } from 'react-native';
 import { RootState, useAppDispatch } from '../redux/store';
 import { toggleTheme  } from '../redux/themeSlice';
 import Toast from 'react-native-toast-message';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { setPhoneVerificationStatus, userLoginWithPhone } from '../redux/userSlice';
+import { setPhoneVerificationStatus } from '../redux/userSlice';
+import { loginWithPhone } from '../redux/authSlice';
 import { useAuthService } from '../services/AuthService';
 import { useSelector } from 'react-redux';
 import getStyles from '../design/styles';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { loginUserSuccess } from '../redux/authSlice';
 
 type LoginScreenParams = {
   Login?: {
@@ -27,6 +28,8 @@ type LoginScreenParams = {
     password: string;
   };
 };
+
+type LoginScreenNavigationProp = StackNavigationProp<GuestStackParamList, 'Login'>;
 
 const emailRegExp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
 const passwordRegExp = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
@@ -91,92 +94,133 @@ const useLogin = () => {
       }
     }
   };
-      useEffect(() => {
-          setIsLoginDisabled(!(emailRegExp.test(email) && passwordRegExp.test(password)));
+        useEffect(() => {
+          // Assuming emailRegExp and passwordRegExp are defined elsewhere in your code
+          const isEmailAndPasswordValid = emailRegExp.test(email) && passwordRegExp.test(password);
+
+          // Check if the email and password are valid, if so enable the login
+          setIsLoginDisabled(!isEmailAndPasswordValid);
         }, [email, password]);
 
-        const validateEmailAndPassword = (email: string, password: string) => {
-          if (email.trim() === "" || password.trim() === "") {
-            return false;
+        useEffect(() => {
+          // Check if the phone number is valid
+          const isPhoneNumberValid = formattedPhoneNumber && formattedPhoneNumber !== '+1-';
+      
+          // If the phone number is valid and login is currently disabled (by email/password validation)
+          // then enable the login
+          if (isPhoneNumberValid && isLoginDisabled) {
+            setIsLoginDisabled(false);
           }
-          
-          return true;
-        };
+        }, [formattedPhoneNumber, isLoginDisabled]);
+      
 
-        const handleLogin = async () => {
-          setLoading(true);
-          if (!validateEmailAndPassword(email, password)) {
-            Toast.show({
-              type: 'error',
-              position: 'bottom',
-              text1: 'Invalid credentials',
-              visibilityTime: 4000,
-              autoHide: true,
-              topOffset: 30,
-              bottomOffset: 40
-            });
-            setLoading(false);
-            return;
-          }
-          try {
+      const handleLogin = async () => {
+        setLoading(true);        
+        // If email and password are provided
+        if (email && password) {
+            // Call email login function
+            await emailLogin(email, password);
+        }
+        // If phone number is provided
+        else if (phoneNumber) {
+            handlePhoneNumberLogin();
+        } 
+        else {
+            handleMissingCredentials();
+        }
+      };
+
+      const handleInvalidCredentials = (email: string) => {
+        console.warn("Invalid credentials provided for email:", email);
+        Toast.show({
+            type: 'error',
+            position: 'bottom',
+            text1: 'Invalid credentials',
+            visibilityTime: 4000,
+            autoHide: true,
+            topOffset: 30,
+            bottomOffset: 40
+        });
+        setLoading(false);
+    };
+
+      const emailLogin = async (email: string, password: string) => {
+        console.log("Starting login process...");
+        setLoading(true);
+        try {
+            console.log("Attempting Firebase login with email:", email);
             const firebaseUser = await signIn(email, password);
-          
+            console.log("Firebase login success:", firebaseUser);
             if (!firebaseUser || !firebaseUser.email) {
-              throw new Error('No email associated with this user');
+                throw new Error('No email associated with this user');
             }
             const user: SimpleUser = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                phoneNumber: null,
+                displayName: firebaseUser.displayName,
             };
             try {
-              await dispatch(loginSuccess(user));
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'Home' }],
-                })
-              );
+                console.log("Dispatching login success...");
+                await dispatch(loginUserSuccess(user));
+                console.log("Login success! Navigation dispatched to Home");
             } catch (err) {
-              console.error('Error dispatching login success:', err);
-              Toast.show({
+                console.error('Error dispatching login success:', err);
+                Toast.show({
+                    type: 'error',
+                    position: 'top',
+                    text1: 'Login Error',
+                    text2: 'Error occurred while processing login.',
+                    visibilityTime: 4000,
+                    autoHide: true,
+                    topOffset: 30,
+                    bottomOffset: 40
+                });
+            }
+        } catch (error: any) {
+            console.error('Firebase login error:', error);
+            let errorMessage;
+            switch (error.code) {
+                case 'auth/wrong-password':
+                    errorMessage = 'The password is invalid';
+                    handleInvalidCredentials(email);
+                    break;
+                case 'auth/user-not-found':
+                    errorMessage = 'No account found with this email';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMessage = 'Too many login attempts. Please try again later.';
+                    break;
+                default:
+                    errorMessage = 'Login failed. Please try again later.';
+            }
+            Toast.show({
                 type: 'error',
                 position: 'top',
                 text1: 'Login Error',
-                text2: 'Error occurred while processing login.',
+                text2: errorMessage,
                 visibilityTime: 4000,
                 autoHide: true,
                 topOffset: 30,
                 bottomOffset: 40
-              });
-            }
-          } catch (error: any) {
-            let errorMessage;
-            switch(error.code) {
-              case 'auth/wrong-password':
-                errorMessage = 'The password is invalid';
-                break;
-              case 'auth/user-not-found':
-                errorMessage = 'No account found with this email';
-                break;
-              case 'auth/too-many-requests':
-                errorMessage = 'Too many login attempts. Please try again later.';
-                break;
-              default:
-                errorMessage = 'Login failed. Please try again later.';
-            } 
-            Toast.show({
+            });
+    
+            setLoading(false);
+        }
+    };
+      
+      const handleMissingCredentials = () => {
+          Toast.show({
               type: 'error',
-              position: 'top',
-              text1: 'Login Error',
-              text2: errorMessage,
+              position: 'bottom',
+              text1: 'Missing credentials',
               visibilityTime: 4000,
               autoHide: true,
               topOffset: 30,
               bottomOffset: 40
-            });
-            setLoading(false);
-          }
-        };        
+          });
+          setLoading(false);
+      };
 
         const handlePhoneNumberLogin = async () => {
           let cleaned = ('' + phoneNumber).replace(/\D/g, '');
@@ -199,7 +243,7 @@ const useLogin = () => {
                   const confirmationResult = await auth().signInWithPhoneNumber(cleaned, true);
                   setConfirmResult(confirmationResult);
                   // Dispatch the action here, but handle the promise returned by the async thunk
-                  dispatch(userLoginWithPhone(cleaned))
+                  dispatch(loginWithPhone({ phoneNumber: cleaned}))
                       .then(() => {
                           // Handle the success case here if needed
                           console.log('Phone login success');
@@ -218,7 +262,7 @@ const useLogin = () => {
                   const confirmationResult = await auth().signInWithPhoneNumber(cleaned);
                   setConfirmResult(confirmationResult);
                   // Dispatch the action here, but handle the promise returned by the async thunk
-                  dispatch(userLoginWithPhone(cleaned))
+                  dispatch(loginWithPhone({ phoneNumber: cleaned}))
                       .then(() => {
                           // Handle the success case here if needed
                           console.log('Phone login success');
@@ -259,9 +303,11 @@ const handleVerifyCode = async () => {
         const user: SimpleUser = {
           uid: userCredential.user.uid,
           email: userCredential.user.email || '',
+          phoneNumber: null,
+          displayName: userCredential.user.displayName || '',
         };
         console.log("User: ", user);
-        dispatch(loginSuccess(user)); // Dispatch action to store the logged in user
+        dispatch(loginUserSuccess(user)); // Dispatch action to store the logged in user
         dispatch(setPhoneVerificationStatus(true)); // Dispatch action to store that phone number is verified
       }
     }
@@ -307,7 +353,7 @@ const handleCancelVerification = () => {
   };
 };
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) => { 
+const LoginScreen: React.FC< LoginScreenProps > = ({ navigation, route }) => {
   const theme = useSelector((state: RootState) => state.theme.current);
   const themedStyles = getStyles(theme);
   const logo = theme.logo;
@@ -338,8 +384,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) => {
     togglePasswordVisibility,
   } = useLogin();
 
-
-
   const onToggleTheme = useCallback(() => {
     dispatch(toggleTheme());
   }, [dispatch]);
@@ -357,7 +401,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) => {
 
 const LoadingIndicator = (
     <View style={getStyles(theme).overlayStyle}>
-        <ActivityIndicator size={'large'} color='#0000ff' animating={true} />
+        <ActivityIndicator size={'large'} color='#00b684' animating={true} />
     </View>
 );
 
@@ -405,7 +449,7 @@ const LoginFormComponents = (
             keyboardType="phone-pad"
             style={[themedStyles.input, {marginBottom: 15, backgroundColor: theme.colors.background }]}
         />
-        <Button mode="contained" 
+        <Button mode="outlined" 
             onPress={handleLogin} 
             style={[getStyles(theme).roundedButton, { marginBottom: 10 }]}
             disabled={isLoginDisabled}

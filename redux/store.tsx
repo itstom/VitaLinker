@@ -1,9 +1,9 @@
 // redux/store.ts
 import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit';
 import { useDispatch, TypedUseSelectorHook, useSelector } from 'react-redux';
-import authReducer, { AuthState } from './authSlice';
-import userReducer, { UserState } from './userSlice';
-import themeReducer, { ThemeState } from '../redux/themeSlice';
+import authReducer from './authSlice';
+import userReducer from './userSlice';
+import themeReducer from '../redux/themeSlice';
 import sensorReducer from '../redux/sensorSlice';
 
 export const store = configureStore({
@@ -13,6 +13,11 @@ export const store = configureStore({
     theme: themeReducer,
     sensor: sensorReducer,
   },
+  middleware: (getDefaultMiddleware) => 
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
+  devTools: process.env.NODE_ENV !== 'production',
 });
 
 export type RootState = ReturnType<typeof store.getState>;

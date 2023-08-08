@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { TextInput, Button, Menu, Provider, Text } from 'react-native-paper';
+import { TextInput, Button, Menu, Provider } from 'react-native-paper';
 import { format } from 'date-fns';
 import { GuestStackParamList } from '../types/types';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -10,8 +10,10 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import styles from '../design/styles';
 import { RootState } from '../redux/store';
 import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import  PhoneNumberInput  from 'react-native-phone-number-input';
 import { TextInput as RNTextInput } from 'react-native';
+import { registerUser, verifyEmail } from '../redux/authSlice';
+import Toast from 'react-native-toast-message';
+import { triggerEmailVerification, userProfileUpdate }  from '../redux/userSlice';
 
 type navigationProp = StackNavigationProp<GuestStackParamList, 'Register'>;
 
@@ -33,7 +35,8 @@ const RegisterScreen: React.FC = () => {
   const [disease, setDisease] = useState('');
   const [diseaseMenuVisible, setDiseaseMenuVisible] = useState(false);
   const [genderMenuVisible, setGenderMenuVisible] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+1-');
+  const [formattedPhoneNumber, setFormattedPhoneNumber] = useState('+1-');
   const themedStyles = styles(theme);
   const nameInputRef = React.useRef<RNTextInput | null>(null);
   const lastNameInputRef = React.useRef<RNTextInput | null>(null);
@@ -41,6 +44,29 @@ const RegisterScreen: React.FC = () => {
   const passwordInputRef = React.useRef<RNTextInput | null>(null);
   const confirmPasswordInputRef = React.useRef<RNTextInput | null>(null);
   const scrollViewRef = React.useRef<ScrollView | null>(null);
+
+  const phoneNumberInputRef = React.useRef<RNTextInput | null>(null);
+
+
+  interface TextInputProps {
+    label: string;
+    value: string;
+    setter: (text: string) => void;
+    ref: React.RefObject<RNTextInput>;
+    nextRef?: React.RefObject<RNTextInput>;
+    onFocus?: (offset: number) => void;
+    focusOffset?: number;
+    isPassword?: boolean;
+    keyboardType?: "default" | "email-address" | "numeric" | "number-pad" | "phone-pad";
+  }
+
+  interface UserPayloadType {
+    displayName?: string;
+    email?: string;
+    emailVerified?: boolean;
+    isAnonymous?: boolean;
+    uid?: string;
+  }
   
   const handleInputFocus = (offset: number) => {
     scrollViewRef.current?.scrollTo({ y: offset, animated: true });
@@ -61,11 +87,58 @@ const RegisterScreen: React.FC = () => {
 
   const handleRegister = async () => {
     try {
-      // Rest of the code...
+      if (password !== confirmPassword) {
+        Toast.show({
+          type: 'error',
+          position: 'bottom',
+          text1: 'Registration Error',
+          text2: 'Passwords do not match. Please check and try again.',
+        });
+        return;
+      }
+      const actionResponse = await dispatch(registerUser({ email, password }));
+        
+      if (actionResponse.payload && actionResponse.type === "auth/registerUser/fulfilled") {
+        const userPayload: UserPayloadType = actionResponse.payload;
+  
+        const cleanUser = {
+          displayName: userPayload.displayName,
+          email: userPayload.email,
+          emailVerified: userPayload.emailVerified,
+          isAnonymous: userPayload.isAnonymous,
+          uid: userPayload.uid,
+        };
+  
+        await dispatch(userProfileUpdate({
+          name,
+          lastName,
+          gender,
+          dateOfBirth,
+          phoneNumber,
+          disease,
+        }));
+        await dispatch(triggerEmailVerification());
+        Toast.show({
+          type: 'success',
+          position: 'bottom',
+          text1: 'Registration Successful',
+          text2: 'A verification email has been sent to your email address.',
+        });
+        navigation.goBack();
+      }
     } catch (error) {
-      // Handle error...
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred while registering. Please try again later.';
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Registration Error',
+        text2: errorMessage,
+      });
     }
   };
+  
+  
+  const isValid = name && lastName && gender && email && password && confirmPassword && phoneNumber && disease && password === confirmPassword;
 
   function handleCancel(): void {
     navigation.goBack(); 
@@ -75,156 +148,177 @@ const RegisterScreen: React.FC = () => {
     <Provider>
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={[themedStyles.centeredView, {backgroundColor: theme.colors.background}]}
+            style={[themedStyles.centeredView, { backgroundColor: theme.colors.background }]}
         >
-            <ScrollView 
-            keyboardShouldPersistTaps='handled'
-            contentContainerStyle={[themedStyles.centeredView, {backgroundColor: theme.colors.background}]}
-            automaticallyAdjustKeyboardInsets={true} 
-            showsVerticalScrollIndicator={false}
-            >   
-                <View style={[themedStyles.centeredView, {backgroundColor: theme.colors.background}]}>
-                    <TextInput 
-                        mode="outlined"
-                        label="Name"
-                        value={name}
-                        onChangeText={setName}
-                        returnKeyType="next"
-                        onSubmitEditing={() => {
-                            if (lastNameInputRef.current) {
-                                lastNameInputRef.current.focus();
-                            }
-                        }}
-                        ref={nameInputRef}
-                        onFocus={() => handleInputFocus(1)}
-                        style={[themedStyles.input,{backgroundColor: theme.colors.background}]}
-                    />
-                    <TextInput 
-                        mode="outlined"
-                        label="Last Name"
-                        value={lastName}
-                        onChangeText={setLastName}
-                        returnKeyType="next"
-                        onSubmitEditing={() => {
-                            if (emailInputRef.current) {
-                                emailInputRef.current.focus();
-                            }
-                        }}
-                        ref={lastNameInputRef}
-                        onFocus={() => handleInputFocus(100)}
-                        style={[themedStyles.input,{backgroundColor: theme.colors.background}]}
-                    />
-                    <View style={[themedStyles.fieldContainer, { backgroundColor: theme.colors.background }]}>
-                        <Menu
-                            visible={genderMenuVisible}
-                            onDismiss={() => setGenderMenuVisible(false)}
-                            anchor={<Button onPress={() => setGenderMenuVisible(true)}>{gender || "Select your gender"}</Button>}
-                        >
-                            {genderOptions.map(option => (
-                                <Menu.Item 
-                                    key={option} 
-                                    onPress={() => {
-                                        setGender(option);
-                                        setGenderMenuVisible(false);
-                                    }}
-                                    title={option} 
-                                />
-                            ))}
-                        </Menu>
-                    </View>
-                    <TextInput 
-                        mode="outlined" 
-                        label="Date of Birth" 
-                        value={format(dateOfBirth, 'yyyy-MM-dd')} 
-                        onTouchStart={showDatePicker} 
-                        onFocus={showDatePicker} 
-                        style={[themedStyles.input,{backgroundColor: theme.colors.background}]}
-                    />
-                    <DateTimePickerModal
-                        style={{backgroundColor: theme.colors.background}}
-                        isVisible={isDatePickerVisible}
-                        mode="date"
-                        onConfirm={handleConfirm}
-                        onCancel={hideDatePicker}
-                        maximumDate={new Date((new Date()).setFullYear((new Date()).getFullYear() - 18))}
-                    />
-                    <TextInput 
-                        mode="outlined"
-                        label="Email"
-                        value={email}
-                        onChangeText={setEmail}
-                        returnKeyType="next"
-                        onSubmitEditing={() => {
-                            if (passwordInputRef.current) {
-                                passwordInputRef.current.focus();
-                            }
-                        }}
-                        ref={emailInputRef}
-                        onFocus={() => handleInputFocus(200)}
-                        style={[themedStyles.input, {backgroundColor: theme.colors.background}]}
-                    />
-                    <PhoneNumberInput
-                        defaultCode="DO"
-                        layout="first"
-                        onChangeText={setPhoneNumber}
-                        value={phoneNumber}
-                        placeholder="Phone Number"
-                        containerStyle={themedStyles.phoneNumberInput}
-                        textContainerStyle={themedStyles.phoneNumberTextContainer}
-                        textInputStyle={themedStyles.phoneNumberText}
-                        flagButtonStyle={themedStyles.phoneNumberFlagButton}
-                    />
-                    <TextInput 
-                        mode="outlined"
-                        label="Password"
-                        value={password}
-                        onChangeText={setPassword}
-                        returnKeyType="next"
-                        secureTextEntry
-                        onSubmitEditing={() => {
-                            if (confirmPasswordInputRef.current) {
-                                confirmPasswordInputRef.current.focus();
-                            }
-                        }}
-                        ref={passwordInputRef}
-                        onFocus={() => handleInputFocus(250)}
-                        style={[themedStyles.input, {backgroundColor: theme.colors.background}]}
-                    />
-                    <TextInput 
-                        mode="outlined"
-                        label="Confirm Password"
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
-                        secureTextEntry
-                        ref={confirmPasswordInputRef}
-                        onFocus={() => handleInputFocus(300)}
-                        style={[themedStyles.input, {backgroundColor: theme.colors.background}]}
-                    />
-                    <View style={[themedStyles.fieldContainer, { backgroundColor: theme.colors.background }]}>
-                        <Menu
-                            visible={diseaseMenuVisible}
-                            onDismiss={() => setDiseaseMenuVisible(false)}
-                            anchor={<Button onPress={() => setDiseaseMenuVisible(true)}>{disease || "Select your condition"}</Button>}
-                        >
-                            {diseaseOptions.map(option => (
-                                <Menu.Item 
-                                    key={option} 
-                                    onPress={() => {
-                                        setDisease(option);
-                                        setDiseaseMenuVisible(false);
-                                    }}
-                                    title={option} 
-                                />
-                            ))}
-                        </Menu>
-                    </View>
-                    <Button mode="contained" onPress={handleRegister} style={[themedStyles.roundedButton,  {backgroundColor: theme.colors.onPrimary}]}>Register</Button>
-                    <Button mode="outlined" onPress={handleCancel} style={[themedStyles.roundedButton, {backgroundColor: theme.colors.error}]}>Cancel</Button>
+            <ScrollView
+                keyboardShouldPersistTaps='handled'
+                contentContainerStyle={[themedStyles.centeredView, { backgroundColor: theme.colors.background }]}
+                automaticallyAdjustKeyboardInsets={true}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={[themedStyles.centeredView, { backgroundColor: theme.colors.background }]}>
+
+                {renderTextInput({
+                    label: "Name",
+                    value: name,
+                    setter: setName,
+                    ref: nameInputRef,
+                    nextRef: lastNameInputRef,
+                    onFocus: handleInputFocus,
+                    focusOffset: 1
+                  })}
+                    {renderTextInput({
+                    label: "Last Name",
+                    value: lastName,
+                    setter: setLastName,
+                    ref: lastNameInputRef,
+                    nextRef: emailInputRef,
+                    onFocus: handleInputFocus,
+                    focusOffset: 100
+                  })}
+                  {renderMenu(
+                    gender, setGender, 
+                    genderMenuVisible, setGenderMenuVisible, 
+                    genderOptions, "Select your gender"
+                    )}
+                    {renderDateInput(
+                      "Date of Birth", dateOfBirth, 
+                      showDatePicker
+                      )}
+                    {renderDatePicker(
+                      isDatePickerVisible, handleConfirm, 
+                      hideDatePicker
+                      )}
+                    {renderTextInput({
+                      label: "Email",
+                      value: email,
+                      setter: setEmail,
+                      ref: emailInputRef,
+                      nextRef: passwordInputRef,
+                      onFocus: handleInputFocus,
+                      focusOffset: 200
+                    })}
+                    {renderTextInput({
+                      label: "Phone Number",
+                      value: phoneNumber,
+                      setter: setPhoneNumber,
+                      ref: phoneNumberInputRef,
+                      nextRef: passwordInputRef,
+                      keyboardType:"phone-pad",
+                      onFocus: handleInputFocus,
+                      focusOffset: 225
+                  })}
+                    {renderTextInput({
+                        label: "Password",
+                        value: password,
+                        setter: setPassword,
+                        ref: passwordInputRef,
+                        nextRef: confirmPasswordInputRef,
+                        onFocus: handleInputFocus,
+                        focusOffset: 250,
+                        isPassword: true
+                      })}
+                    {renderTextInput({
+                        label: "Confirm Password",
+                        value: confirmPassword,
+                        setter: setConfirmPassword,
+                        ref: confirmPasswordInputRef,
+                        nextRef: undefined,
+                        onFocus: handleInputFocus,
+                        focusOffset: 300,
+                        isPassword: true
+                      })}
+                    {renderMenu(
+                      disease, setDisease, 
+                      diseaseMenuVisible, setDiseaseMenuVisible, 
+                      diseaseOptions, "Select your condition"
+                      )}
+                    <Button mode="contained" onPress={handleRegister} disabled={!isValid} style={[themedStyles.roundedButton, { backgroundColor: theme.colors.onPrimary }]}>Register</Button>
+                    <Button mode="outlined" onPress={handleCancel} style={[themedStyles.roundedButton, { backgroundColor: theme.colors.error }]}>Cancel</Button>
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
     </Provider>
 );
-};
+
+function renderTextInput(props: TextInputProps): JSX.Element {
+  const {
+  label,
+  value,
+  setter,
+  ref,
+  nextRef,
+  onFocus,
+  focusOffset,
+  isPassword,
+  keyboardType
+  } = props;
+
+  return (
+    <TextInput
+      mode="outlined"
+      label={label}
+      value={value}
+      onChangeText={setter}
+      returnKeyType="next"
+      onSubmitEditing={() => nextRef?.current?.focus()}
+      ref={ref}
+      onFocus={() => onFocus && focusOffset && onFocus(focusOffset)}
+      secureTextEntry={isPassword}
+      keyboardType={keyboardType}
+      style={[themedStyles.input, { backgroundColor: theme.colors.background }]}
+    />
+  );
+}
+
+function renderMenu(value: string, setter: React.Dispatch<React.SetStateAction<string>>, menuVisible: boolean, setMenuVisible: React.Dispatch<React.SetStateAction<boolean>>, options: string[], placeholder: string): JSX.Element {
+    return (
+        <View style={[themedStyles.fieldContainer, { backgroundColor: theme.colors.background }]}>
+            <Menu
+                visible={menuVisible}
+                onDismiss={() => setMenuVisible(false)}
+                anchor={<Button onPress={() => setMenuVisible(true)}>{value || placeholder}</Button>}
+            >
+                {options.map(option => (
+                    <Menu.Item
+                        key={option}
+                        onPress={() => {
+                            setter(option);
+                            setMenuVisible(false);
+                        }}
+                        title={option}
+                    />
+                ))}
+            </Menu>
+        </View>
+    );
+}
+
+function renderDateInput(label: string, value: Date, onTouchStart: () => void): JSX.Element {
+    return (
+        <TextInput
+            mode="outlined"
+            label={label}
+            value={format(value, 'yyyy-MM-dd')}
+            onTouchStart={onTouchStart}
+            onFocus={onTouchStart}
+            style={[themedStyles.input, { backgroundColor: theme.colors.background }]}
+        />
+    );
+}
+
+function renderDatePicker(isVisible: boolean, onConfirm: (date: Date) => void, onCancel: () => void): JSX.Element {
+    return (
+        <DateTimePickerModal
+            style={{ backgroundColor: theme.colors.background }}
+            isVisible={isVisible}
+            mode="date"
+            onConfirm={onConfirm}
+            onCancel={onCancel}
+            maximumDate={new Date((new Date()).setFullYear((new Date()).getFullYear() - 18))}
+        />
+    );
+  }
+}
 
 export default RegisterScreen;

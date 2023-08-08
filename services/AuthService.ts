@@ -1,7 +1,7 @@
 // services/AuthService.ts
 import auth from '@react-native-firebase/auth';
 import { useDispatch } from 'react-redux';
-import { loginSuccess, loginFailed } from '../redux/authSlice';
+import { loginUserSuccess, loginUserFailure } from '../redux/authSlice';
 import { useState } from 'react';
 import { User } from '../types/types'
 
@@ -13,7 +13,7 @@ export const useAuthService = () => {
     try {
       const { user } = await auth().signInWithEmailAndPassword(email, password);
       console.log('User signed in:', user);
-      dispatch(loginSuccess(user));
+      dispatch(loginUserSuccess(user));
       setUser({
         uid: user.uid,
         email: user.email,
@@ -26,7 +26,7 @@ export const useAuthService = () => {
       return user;
     } catch (error) {
       console.error('Failed to sign in:', error);
-      dispatch(loginFailed());
+      dispatch(loginUserFailure("Failed to sign in"));
       throw error;
     }
   };

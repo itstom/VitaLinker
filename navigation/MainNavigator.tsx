@@ -19,7 +19,7 @@ const MainNavigator = () => {
             const lastOpened = await AsyncStorage.getItem('lastOpenedTimestamp');
             if (!lastOpened || (Date.now() - parseInt(lastOpened) > SPLASH_DISPLAY_INTERVAL)) {
                 setShowSplash(true);
-                setTimeout(() => setShowSplash(false), 3000);  // display splash screen for 3 seconds
+                setTimeout(() => setShowSplash(false), 3000);
             } else {
                 setShowSplash(false);
             }

@@ -1,34 +1,163 @@
 //redux/authSlice.tsx
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
-type User = FirebaseAuthTypes.User;
-
-export interface AuthState {
+type AuthState = {
   isAuthenticated: boolean;
-  user: User | null;
-}
+  phoneConfirmationId: string | null;
+  isEmailVerifying: boolean;
+  phoneConfirmation: FirebaseAuthTypes.ConfirmationResult | null;
+  error: string | null;
+  user: SimpleUser | null;
+};
 
 const initialState: AuthState = {
   isAuthenticated: false,
+  phoneConfirmationId: null,
+  isEmailVerifying: false,
+  phoneConfirmation: null,
+  error: null,
   user: null,
 };
+
+export type SimpleUser = {
+  uid: string;
+  email: string | null;
+  phoneNumber: string | null;
+  displayName: string | null;
+};
+
+export const loginUser = createAsyncThunk(
+  'auth/loginUser',
+  async ({ email, password }: { email: string; password: string; }, thunkAPI) => {
+    try {
+      const userCredential = await auth().signInWithEmailAndPassword(email, password);
+      return userCredential.user ? true : thunkAPI.rejectWithValue('Authentication failed.');
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as any).message || 'An error occurred during login.');
+    }
+  }
+);
+
+export const loginWithPhone = createAsyncThunk(
+  'auth/loginWithPhone',
+  async ({ phoneNumber }: { phoneNumber: string; }, thunkAPI) => {
+    try {
+      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+      return confirmation;
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as any).message || 'An error occurred during phone login.');
+    }
+  }
+);
+
+export const registerUser = createAsyncThunk(
+  'auth/registerUser',
+  async ({ email, password }: { email: string; password: string; }, thunkAPI) => {
+    try {
+      const response = await auth().createUserWithEmailAndPassword(email, password);
+      return response.user ? true : thunkAPI.rejectWithValue('Registration failed.');
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as any).message || 'An error occurred during registration.');
+    }
+  }
+);
+
+export const verifyEmail = createAsyncThunk(
+  'auth/verifyEmail',
+  async (_, thunkAPI) => {
+    try {
+      const currentUser = auth().currentUser;
+      if (currentUser) {
+        await currentUser.sendEmailVerification();
+        return true;
+      } else {
+        return thunkAPI.rejectWithValue('No user is currently logged in.');
+      }
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as any).message || 'An error occurred while sending verification email.');
+    }
+  }
+);
+
+export const confirmSmsCode = createAsyncThunk(
+  'auth/confirmSmsCode',
+  async ({ confirmationResult, smsCode }: { confirmationResult: FirebaseAuthTypes.ConfirmationResult; smsCode: string; }, thunkAPI) => {
+    try {
+      const userCredential = await confirmationResult.confirm(smsCode);
+      
+      // Check if userCredential is null or if userCredential.user is null/undefined
+      if (!userCredential || !userCredential.user) {
+        return thunkAPI.rejectWithValue('SMS code confirmation failed.');
+      }
+
+      // If everything is fine, return true (or userCredential.user if you need to)
+      return true;
+      
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as any).message || 'An error occurred during SMS code confirmation.');
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    loginSuccess: (state, action: PayloadAction<User>) => {
+    loginUserSuccess: (state, action: PayloadAction<SimpleUser>) => {
       state.isAuthenticated = true;
-      state.user = action.payload;
+      state.error = null;
     },
-    loginFailed: (state) => {
+    loginUserFailure: (state, action: PayloadAction<string>) => {
       state.isAuthenticated = false;
-      state.user = null;
-    },
+      state.error = action.payload;
+    }
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loginUser.fulfilled, (state) => {
+        state.isAuthenticated = true;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.isAuthenticated = false;
+        state.error = action.payload as string;
+      })
+      .addCase(loginWithPhone.fulfilled, (state, action) => {
+        state.phoneConfirmation = action.payload;
+      })
+      .addCase(loginWithPhone.rejected, (state, action) => {
+        state.isAuthenticated = false;
+        state.error = action.payload as string;
+      })
+      .addCase(registerUser.fulfilled, (state) => {
+        state.isAuthenticated = true;
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.isAuthenticated = false;
+        state.error = action.payload as string;
+      })
+      .addCase(verifyEmail.pending, (state) => {
+        state.isEmailVerifying = true;
+      })
+      .addCase(verifyEmail.fulfilled, (state) => {
+        state.isEmailVerifying = false;
+        state.isAuthenticated = true;
+      })
+      .addCase(verifyEmail.rejected, (state, action) => {
+        state.isEmailVerifying = false;
+        state.isAuthenticated = false;
+        state.error = action.payload as string;
+      })
+      .addCase(confirmSmsCode.fulfilled, (state) => {
+        state.isAuthenticated = true;
+      })
+      .addCase(confirmSmsCode.rejected, (state, action) => {
+        state.isAuthenticated = false;
+        state.error = action.payload as string;
+      });
+  }
 });
 
-export const { loginSuccess, loginFailed } = authSlice.actions;
-
 export default authSlice.reducer;
+
+export const { loginUserSuccess, loginUserFailure } = authSlice.actions;

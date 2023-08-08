@@ -1,7 +1,6 @@
 // types.ts
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, ParamListBase } from '@react-navigation/native';
-import { SAVE_CONFIRMATION_RESULT } from '../redux/actions/authActions';
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
 export type User = {
@@ -13,6 +12,8 @@ export type User = {
   phoneNumber: string | null;
   photoURL: string | null;
 }
+
+export type ConfirmationResult = FirebaseAuthTypes.ConfirmationResult;
 
 // Define the list of screens in the Auth stack navigator
 export type GuestStackParamList = {
@@ -63,13 +64,6 @@ export type SettingsScreenProps = {
   navigation: StackNavigationProp<UserStackParamList, 'Settings'>;
   route: RouteProp<UserStackParamList, 'Settings'>;
 };
-
-
-
-export interface SaveConfirmationResultAction {
-  type: typeof SAVE_CONFIRMATION_RESULT;
-  payload: FirebaseAuthTypes.ConfirmationResult;
-}
 
 export type NavigationProps<ParamList extends ParamListBase, RouteName extends keyof ParamList> = {
     navigation: StackNavigationProp<ParamList, RouteName>;

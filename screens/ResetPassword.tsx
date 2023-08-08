@@ -5,7 +5,7 @@ import { TextInput, Button, Title, Snackbar } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
 import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import { AppDispatch, RootState } from '../redux/store';
-import { resetPasswordSuccess, resetPasswordFailed } from '../redux/actions/authActions';
+import { resetPasswordSuccess, resetPasswordFailed } from '../redux/authSlice';
 
 const ResetPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState('');
