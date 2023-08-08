@@ -75,4 +75,3 @@ const mapTheme = (theme: AppTheme): typeof DefaultTheme => {
 export { mapTheme };
 
 export default themeSlice.reducer;
-

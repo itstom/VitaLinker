@@ -6,9 +6,9 @@ import { store, RootState, useAppDispatch, useAppSelector } from './redux/store'
 import { Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { Provider as PaperProvider } from 'react-native-paper';
-import MainNavigator from './navigation/MainNavigator';
 import SplashScreen from './screens/SplashScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import  {RootNavigator}  from './navigation/NavigationRoutes';
 
 interface AppProps {
   isFirebaseInitialized: boolean;
@@ -51,7 +51,7 @@ const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
     <Provider store={store}>
       <PaperProvider theme={theme}>
         <NavigationContainer theme={mapTheme(theme)}>
-          <MainNavigator />
+          <RootNavigator />
         </NavigationContainer>
       </PaperProvider>
     </Provider>

@@ -2,6 +2,7 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, ParamListBase } from '@react-navigation/native';
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 
 export type User = {
   uid: string;
@@ -51,18 +52,18 @@ export type ResetPasswordScreenProps = {
 };
 
 export type HomeScreenProps = {
-  navigation: StackNavigationProp<UserStackParamList, 'Home'>;
-  route: RouteProp<UserStackParamList, 'Home'>;
+  navigation: UserDrawerNavigationProp<'Home'>;
+  route: UserDrawerRouteProp<'Home'>;
 };
 
 export type DashboardScreenProps = {
-  navigation: StackNavigationProp<UserStackParamList, 'Dashboard'>;
-  route: RouteProp<UserStackParamList, 'Dashboard'>;
+  navigation: UserDrawerNavigationProp<'Dashboard'>;
+  route: UserDrawerRouteProp<'Dashboard'>;
 };
 
 export type SettingsScreenProps = {
-  navigation: StackNavigationProp<UserStackParamList, 'Settings'>;
-  route: RouteProp<UserStackParamList, 'Settings'>;
+  navigation: UserDrawerNavigationProp<'Settings'>;
+  route: UserDrawerRouteProp<'Settings'>;
 };
 
 export type NavigationProps<ParamList extends ParamListBase, RouteName extends keyof ParamList> = {
@@ -73,6 +74,10 @@ export type NavigationProps<ParamList extends ParamListBase, RouteName extends k
 // For GuestStackParamList
 export type GuestStackNavigationProp<T extends keyof GuestStackParamList> = StackNavigationProp<GuestStackParamList, T>;
 export type GuestStackRouteProp<T extends keyof GuestStackParamList> = RouteProp<GuestStackParamList, T>;
+
+// For UserStackParamList
+export type UserDrawerNavigationProp<T extends keyof UserStackParamList> = DrawerNavigationProp<UserStackParamList, T>;
+export type UserDrawerRouteProp<T extends keyof UserStackParamList> = RouteProp<UserStackParamList, T>;
 
 // For UserStackParamList
 export type UserStackNavigationProp<T extends keyof UserStackParamList> = StackNavigationProp<UserStackParamList, T>;

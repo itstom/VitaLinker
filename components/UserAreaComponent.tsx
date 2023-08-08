@@ -1,27 +1,27 @@
 //components/UserAreaComponent.tsx
-
 import React from 'react';
-import { View, Button } from 'react-native';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { View, Button, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { UserStackNavigationProp } from '../types/types';  // make sure the path is correct
 
-type DrawerParamList = {
-  Home: undefined;
-  Dashboard: undefined;
-  Settings: undefined;
-  ResetPassword: undefined;
-};
+const UserAreaComponent: React.FC = () => {
+  const navigation = useNavigation<UserStackNavigationProp<'Home'>>();
 
-type UserAreaComponentProps = {
-  navigation: DrawerNavigationProp<DrawerParamList, 'Home'>;
-};
-
-const UserAreaComponent: React.FC<UserAreaComponentProps> = ({ navigation }) => {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <View style={styles.container}>
       <Button title="Go to Dashboard" onPress={() => navigation.navigate('Dashboard')} />
       <Button title="Go to Settings" onPress={() => navigation.navigate('Settings')} />
     </View>
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+    paddingTop: 50,
+  },
+});
+
 export default UserAreaComponent;
+

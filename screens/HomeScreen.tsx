@@ -2,15 +2,17 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { RootState, useAppSelector } from '../redux/store';
-import { HomeScreenProps, UserStackNavigationProp } from '../types/types';
-import { GuestNavigator, UserNavigator } from '../navigation/NavigationRoutes';
-import { useNavigation } from '@react-navigation/native';
+import { UserStackParamList } from '../types/types';
+import { RouteProp } from '@react-navigation/native';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 
+type HomeScreenProps = {
+  route: RouteProp<UserStackParamList, 'Home'>;
+  navigation: DrawerNavigationProp<UserStackParamList, 'Home'>;
+};
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ route }) => {
-  const navigation = useNavigation<UserStackNavigationProp<'Home'>>();
+const HomeScreen: React.FC<HomeScreenProps> = ({ route, navigation }) => {
   const theme = useAppSelector((state: RootState) => state.theme.current);
-  const isAuthenticated = useAppSelector((state: RootState) => state.auth.isAuthenticated);
   const user = useAppSelector((state: RootState) => state.auth.user);
   const avg24h = useAppSelector((state: RootState) => state.sensor.avg24h);
   const avg7d = useAppSelector((state: RootState) => state.sensor.avg7d);

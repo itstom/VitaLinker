@@ -100,6 +100,17 @@ export const confirmSmsCode = createAsyncThunk(
   }
 );
 
+export const logoutUser = createAsyncThunk<void, void | undefined>(
+  'auth/logoutUser',
+  async (_, thunkAPI) => {
+    try {
+      await auth().signOut();
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as any).message || 'An error occurred during logout.');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -111,6 +122,11 @@ const authSlice = createSlice({
     loginUserFailure: (state, action: PayloadAction<string>) => {
       state.isAuthenticated = false;
       state.error = action.payload;
+    },
+    logout: (state) => {
+      state.isAuthenticated = false;
+      state.user = null;
+      state.error = null;
     }
   },
   extraReducers: (builder) => {
@@ -152,6 +168,13 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
       })
       .addCase(confirmSmsCode.rejected, (state, action) => {
+        state.isAuthenticated = false;
+        state.error = action.payload as string;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.isAuthenticated = false;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
         state.isAuthenticated = false;
         state.error = action.payload as string;
       });
