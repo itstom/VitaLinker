@@ -1,19 +1,5 @@
 // Styles.ts
-import { StyleSheet } from 'react-native';
-import { AppTheme } from './themes';
-
-export interface ThemeType {
-  colors: {
-    primary: string;
-    secondary: string;
-    background: string;
-    card: string;
-    text: string;
-    border: string;
-    notification: string;
-  };
-  dark: boolean;
-}
+import { AppTheme } from '../design/themes';
 
 type StyleType = {
   container: object;
@@ -32,7 +18,7 @@ type StyleType = {
   overlayStyle: object;
 };
 
-const getStyles = (theme: AppTheme): StyleType => StyleSheet.create({
+const getStyles = (theme: AppTheme): StyleType => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -55,9 +41,9 @@ const getStyles = (theme: AppTheme): StyleType => StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
     alignSelf: 'center',
+    backgroundColor: theme.colors.primary,
   },
   input: {
-    backgroundColor: theme.colors.background,
     marginTop: 10,
     marginBottom: 10,
     height: 50,
@@ -70,18 +56,21 @@ const getStyles = (theme: AppTheme): StyleType => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 22,
+    backgroundColor: theme.colors.background,
   },
   fieldContainer: {
     marginBottom: 10,
     borderBottomWidth: 1,
     borderColor: '#ccc',
     paddingBottom: 10,
+    backgroundColor: theme.colors.secondary,
   },
   phoneNumberInput: {
     marginBottom: 10,
+    backgroundColor: theme.colors.secondary,
   },
   phoneNumberTextContainer: {
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.secondary,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.primary,
   },
@@ -98,7 +87,7 @@ const getStyles = (theme: AppTheme): StyleType => StyleSheet.create({
   containerStyle: {
     flex: 1,
     justifyContent: 'center',
-    
+    alignItems: 'center',
     backgroundColor: theme.colors.background,
   },
   themeToggle: {
@@ -108,7 +97,6 @@ const getStyles = (theme: AppTheme): StyleType => StyleSheet.create({
     padding: 8,
     margin: 5,
     borderRadius: 10,
-    backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
@@ -120,7 +108,7 @@ const getStyles = (theme: AppTheme): StyleType => StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor:'rgba(0,0,0,0.5)',
+    backgroundColor:theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },

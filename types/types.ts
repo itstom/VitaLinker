@@ -16,7 +16,6 @@ export type User = {
 
 export type ConfirmationResult = FirebaseAuthTypes.ConfirmationResult;
 
-// Define the list of screens in the Auth stack navigator
 export type GuestStackParamList = {
   Login: undefined;
   Register: undefined;

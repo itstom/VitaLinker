@@ -2,13 +2,20 @@
 import React, { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
 import { loadTheme, mapTheme } from './redux/themeSlice';
-import { store, RootState, useAppDispatch, useAppSelector } from './redux/store';
+import { store, useAppDispatch, useAppSelector } from './redux/store';
 import { Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import SplashScreen from './screens/SplashScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import  {RootNavigator}  from './navigation/NavigationRoutes';
+import { DefaultTheme as NavigationDefaultTheme, DarkTheme as NavigationDarkTheme } from '@react-navigation/native';
+import { DefaultTheme as PaperDefaultTheme, MD2DarkTheme as PaperDarkTheme } from 'react-native-paper';
+import merge from 'lodash/merge';
+import { lightTheme, darkTheme } from './design/themes';
+
+const CombinedDefaultTheme = merge(NavigationDefaultTheme, PaperDefaultTheme, lightTheme, { mode: "adaptive" });
+const CombinedDarkTheme = merge(NavigationDarkTheme, PaperDarkTheme, darkTheme, { mode: "adaptive" });
 
 interface AppProps {
   isFirebaseInitialized: boolean;
@@ -20,6 +27,8 @@ const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
   const [showSplash, setShowSplash] = useState(false);
   const dispatch = useAppDispatch();
   const theme = useAppSelector((state) => state.theme.current);
+  const appliedTheme = theme === 'light' ? CombinedDefaultTheme : CombinedDarkTheme;
+
 
   useEffect(() => {
     dispatch(loadTheme());
@@ -49,8 +58,8 @@ const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
 
   return (
     <Provider store={store}>
-      <PaperProvider theme={theme}>
-        <NavigationContainer theme={mapTheme(theme)}>
+      <PaperProvider theme={appliedTheme}>
+      <NavigationContainer theme={theme === 'dark' ? CombinedDarkTheme : CombinedDefaultTheme}>
           <RootNavigator />
         </NavigationContainer>
       </PaperProvider>

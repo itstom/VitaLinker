@@ -12,13 +12,13 @@ type HomeScreenProps = {
 };
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ route, navigation }) => {
-  const theme = useAppSelector((state: RootState) => state.theme.current);
+  const actualTheme = useAppSelector((state: RootState) => state.theme.current);
   const user = useAppSelector((state: RootState) => state.auth.user);
   const avg24h = useAppSelector((state: RootState) => state.sensor.avg24h);
   const avg7d = useAppSelector((state: RootState) => state.sensor.avg7d);
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View>
       <View style={{ padding: 20 }}>
         <Text style={{ fontSize: 28, marginBottom: 10 }}>{`Welcome, ${user ? user.displayName: "Guest"}`}</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Dashboard')}>

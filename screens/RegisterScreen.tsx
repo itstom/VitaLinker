@@ -1,19 +1,21 @@
 // RegisterScreen.tsx
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { TextInput, Button, Menu, Provider } from 'react-native-paper';
 import { format } from 'date-fns';
-import { GuestStackParamList } from '../types/types';
+import { GuestStackParamList, LoginScreenProps } from '../types/types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import styles from '../design/styles';
-import { RootState } from '../redux/store';
+import { RootState, useAppSelector } from '../redux/store';
 import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput as RNTextInput } from 'react-native';
 import { registerUser, verifyEmail } from '../redux/authSlice';
 import Toast from 'react-native-toast-message';
-import { triggerEmailVerification, userProfileUpdate }  from '../redux/userSlice';
+import { userProfileUpdate }  from '../redux/userSlice';
+import getStyles from '../design/styles';
+import { darkTheme, lightTheme } from '../design/themes';
+import { loadTheme, persistTheme, toggleTheme } from '../redux/themeSlice';
 
 type navigationProp = StackNavigationProp<GuestStackParamList, 'Register'>;
 
@@ -23,7 +25,11 @@ const diseaseOptions = ['Lupus', 'Rheumatoid arthritis', 'Type I diabetes'];
 const RegisterScreen: React.FC = () => {
   const navigation = useNavigation<navigationProp>();
   const dispatch = useDispatch();
-  const theme = useSelector((state: RootState) => state.theme.current);
+  const actualTheme = useAppSelector((state: RootState) => {
+    const type = state.theme.current;
+    return type === 'dark' ? darkTheme : lightTheme;
+  });
+  const themedStyles = getStyles(actualTheme);
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState('');
@@ -37,14 +43,12 @@ const RegisterScreen: React.FC = () => {
   const [genderMenuVisible, setGenderMenuVisible] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('+1-');
   const [formattedPhoneNumber, setFormattedPhoneNumber] = useState('+1-');
-  const themedStyles = styles(theme);
   const nameInputRef = React.useRef<RNTextInput | null>(null);
   const lastNameInputRef = React.useRef<RNTextInput | null>(null);
   const emailInputRef = React.useRef<RNTextInput | null>(null);
   const passwordInputRef = React.useRef<RNTextInput | null>(null);
   const confirmPasswordInputRef = React.useRef<RNTextInput | null>(null);
   const scrollViewRef = React.useRef<ScrollView | null>(null);
-
   const phoneNumberInputRef = React.useRef<RNTextInput | null>(null);
 
 
@@ -57,6 +61,7 @@ const RegisterScreen: React.FC = () => {
     onFocus?: (offset: number) => void;
     focusOffset?: number;
     isPassword?: boolean;
+    style?: any;
     keyboardType?: "default" | "email-address" | "numeric" | "number-pad" | "phone-pad";
   }
 
@@ -87,6 +92,7 @@ const RegisterScreen: React.FC = () => {
 
   const handleRegister = async () => {
     try {
+      console.log('Registering user...');
       if (password !== confirmPassword) {
         Toast.show({
           type: 'error',
@@ -97,10 +103,9 @@ const RegisterScreen: React.FC = () => {
         return;
       }
       const actionResponse = await dispatch(registerUser({ email, password }));
-        
+      console.log('actionResponse', actionResponse);  
       if (actionResponse.payload && actionResponse.type === "auth/registerUser/fulfilled") {
         const userPayload: UserPayloadType = actionResponse.payload;
-  
         const cleanUser = {
           displayName: userPayload.displayName,
           email: userPayload.email,
@@ -108,7 +113,6 @@ const RegisterScreen: React.FC = () => {
           isAnonymous: userPayload.isAnonymous,
           uid: userPayload.uid,
         };
-  
         await dispatch(userProfileUpdate({
           name,
           lastName,
@@ -117,7 +121,8 @@ const RegisterScreen: React.FC = () => {
           phoneNumber,
           disease,
         }));
-        await dispatch(triggerEmailVerification());
+        await dispatch(verifyEmail());
+        console.log('User registered successfully, dispatching verify email', cleanUser);
         Toast.show({
           type: 'success',
           position: 'bottom',
@@ -137,7 +142,6 @@ const RegisterScreen: React.FC = () => {
     }
   };
   
-  
   const isValid = name && lastName && gender && email && password && confirmPassword && phoneNumber && disease && password === confirmPassword;
 
   function handleCancel(): void {
@@ -148,93 +152,114 @@ const RegisterScreen: React.FC = () => {
     <Provider>
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={[themedStyles.centeredView, { backgroundColor: theme.colors.background }]}
+            style={[themedStyles.centeredView, { backgroundColor: actualTheme.colors.background }]}
         >
             <ScrollView
-                keyboardShouldPersistTaps='handled'
-                contentContainerStyle={[themedStyles.centeredView, { backgroundColor: theme.colors.background }]}
-                automaticallyAdjustKeyboardInsets={true}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={[themedStyles.centeredView, { backgroundColor: theme.colors.background }]}>
+            keyboardShouldPersistTaps='handled'
+            contentContainerStyle={{ ...themedStyles.centeredView, flexGrow: 1 }}
+            automaticallyAdjustContentInsets={true}
+            showsVerticalScrollIndicator={false}
+        >
+                
+        <View style={themedStyles.centeredView}>
 
-                {renderTextInput({
-                    label: "Name",
-                    value: name,
-                    setter: setName,
-                    ref: nameInputRef,
-                    nextRef: lastNameInputRef,
-                    onFocus: handleInputFocus,
-                    focusOffset: 1
-                  })}
-                    {renderTextInput({
-                    label: "Last Name",
-                    value: lastName,
-                    setter: setLastName,
-                    ref: lastNameInputRef,
-                    nextRef: emailInputRef,
-                    onFocus: handleInputFocus,
-                    focusOffset: 100
-                  })}
-                  {renderMenu(
-                    gender, setGender, 
-                    genderMenuVisible, setGenderMenuVisible, 
-                    genderOptions, "Select your gender"
-                    )}
-                    {renderDateInput(
-                      "Date of Birth", dateOfBirth, 
-                      showDatePicker
-                      )}
-                    {renderDatePicker(
-                      isDatePickerVisible, handleConfirm, 
-                      hideDatePicker
-                      )}
-                    {renderTextInput({
-                      label: "Email",
-                      value: email,
-                      setter: setEmail,
-                      ref: emailInputRef,
-                      nextRef: passwordInputRef,
-                      onFocus: handleInputFocus,
-                      focusOffset: 200
-                    })}
-                    {renderTextInput({
-                      label: "Phone Number",
-                      value: phoneNumber,
-                      setter: setPhoneNumber,
-                      ref: phoneNumberInputRef,
-                      nextRef: passwordInputRef,
-                      keyboardType:"phone-pad",
-                      onFocus: handleInputFocus,
-                      focusOffset: 225
-                  })}
-                    {renderTextInput({
-                        label: "Password",
-                        value: password,
-                        setter: setPassword,
-                        ref: passwordInputRef,
-                        nextRef: confirmPasswordInputRef,
-                        onFocus: handleInputFocus,
-                        focusOffset: 250,
-                        isPassword: true
-                      })}
-                    {renderTextInput({
-                        label: "Confirm Password",
-                        value: confirmPassword,
-                        setter: setConfirmPassword,
-                        ref: confirmPasswordInputRef,
-                        nextRef: undefined,
-                        onFocus: handleInputFocus,
-                        focusOffset: 300,
-                        isPassword: true
-                      })}
-                    {renderMenu(
-                      disease, setDisease, 
-                      diseaseMenuVisible, setDiseaseMenuVisible, 
-                      diseaseOptions, "Select your condition"
-                      )}
-                    <Button mode="contained" onPress={handleRegister} disabled={!isValid} style={[themedStyles.roundedButton, { backgroundColor: theme.colors.onPrimary }]}>Register</Button>
-                    <Button mode="outlined" onPress={handleCancel} style={[themedStyles.roundedButton, { backgroundColor: theme.colors.error }]}>Cancel</Button>
+            {renderTextInput({
+                label: "Name",
+                value: name,
+                setter: setName,
+                ref: nameInputRef,
+                nextRef: lastNameInputRef,
+                onFocus: handleInputFocus,
+                style: [ themedStyles.input, { backgroundColor: actualTheme.colors.background }],
+                focusOffset: 1
+            })}
+            {renderTextInput({
+                label: "Last Name",
+                value: lastName,
+                setter: setLastName,
+                ref: lastNameInputRef,
+                nextRef: emailInputRef,
+                onFocus: handleInputFocus,
+                focusOffset: 100,
+                style: [ themedStyles.input, { backgroundColor: actualTheme.colors.background }]
+            })}
+            {renderMenu(
+                gender, setGender, 
+                genderMenuVisible, setGenderMenuVisible, 
+                genderOptions, "Select your gender",
+            )}
+            {renderDateInput(
+                "Date of Birth", dateOfBirth, 
+                showDatePicker
+            )}
+            {renderDatePicker(
+                isDatePickerVisible, handleConfirm, 
+                hideDatePicker
+            )}
+            {renderTextInput({
+                label: "Email",
+                value: email,
+                setter: setEmail,
+                ref: emailInputRef,
+                nextRef: passwordInputRef,
+                onFocus: handleInputFocus,
+                focusOffset: 200,
+                keyboardType:"email-address",
+                style: [ themedStyles.input, { backgroundColor: actualTheme.colors.background }]
+            })}
+            {renderTextInput({
+                label: "Phone Number",
+                value: phoneNumber,
+                setter: setPhoneNumber,
+                ref: phoneNumberInputRef,
+                nextRef: passwordInputRef,
+                keyboardType:"phone-pad",
+                onFocus: handleInputFocus,
+                focusOffset: 225,
+                style: [ themedStyles.input, { backgroundColor: actualTheme.colors.background }]
+            })}
+            {renderTextInput({
+                label: "Password",
+                value: password,
+                setter: setPassword,
+                ref: passwordInputRef,
+                nextRef: confirmPasswordInputRef,
+                onFocus: handleInputFocus,
+                focusOffset: 250,
+                isPassword: true,
+                style: [ themedStyles.input, { backgroundColor: actualTheme.colors.background }]
+            })}
+            {renderTextInput({
+                label: "Confirm Password",
+                value: confirmPassword,
+                setter: setConfirmPassword,
+                ref: confirmPasswordInputRef,
+                nextRef: undefined,
+                onFocus: handleInputFocus,
+                focusOffset: 300,
+                isPassword: true,
+                style: [ themedStyles.input, { backgroundColor: actualTheme.colors.background }]
+            })}
+            {renderMenu(
+                disease, setDisease, 
+                diseaseMenuVisible, setDiseaseMenuVisible, 
+                diseaseOptions, "Select your condition"
+            )}
+                    <Button 
+                        mode="contained" 
+                        onPress={handleRegister} 
+                        disabled={!isValid} 
+                        style={[getStyles(actualTheme).roundedButton, { marginBottom: 10 }]}
+                    >
+                        Register
+                    </Button>
+                    <Button 
+                        mode="outlined" 
+                        onPress={handleCancel} 
+                        style={[themedStyles.roundedButton, { borderColor: actualTheme.colors.error, backgroundColor: actualTheme.colors.error, marginBottom: 10 }]}
+                    >
+                        Cancel
+                    </Button>
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -266,14 +291,14 @@ function renderTextInput(props: TextInputProps): JSX.Element {
       onFocus={() => onFocus && focusOffset && onFocus(focusOffset)}
       secureTextEntry={isPassword}
       keyboardType={keyboardType}
-      style={[themedStyles.input, { backgroundColor: theme.colors.background }]}
+      style={[themedStyles.input, { backgroundColor: actualTheme.colors.background }]}
     />
   );
 }
 
 function renderMenu(value: string, setter: React.Dispatch<React.SetStateAction<string>>, menuVisible: boolean, setMenuVisible: React.Dispatch<React.SetStateAction<boolean>>, options: string[], placeholder: string): JSX.Element {
     return (
-        <View style={[themedStyles.fieldContainer, { backgroundColor: theme.colors.background }]}>
+        <View style={[themedStyles.fieldContainer, { backgroundColor: actualTheme.colors.background }]}>
             <Menu
                 visible={menuVisible}
                 onDismiss={() => setMenuVisible(false)}
@@ -300,9 +325,8 @@ function renderDateInput(label: string, value: Date, onTouchStart: () => void): 
             mode="outlined"
             label={label}
             value={format(value, 'yyyy-MM-dd')}
-            onTouchStart={onTouchStart}
-            onFocus={onTouchStart}
-            style={[themedStyles.input, { backgroundColor: theme.colors.background }]}
+            onKeyPress={onTouchStart}
+            style={[themedStyles.input, { backgroundColor: actualTheme.colors.background }]}
         />
     );
 }
@@ -310,7 +334,7 @@ function renderDateInput(label: string, value: Date, onTouchStart: () => void): 
 function renderDatePicker(isVisible: boolean, onConfirm: (date: Date) => void, onCancel: () => void): JSX.Element {
     return (
         <DateTimePickerModal
-            style={{ backgroundColor: theme.colors.background }}
+            style={{ backgroundColor: actualTheme.colors.background }}
             isVisible={isVisible}
             mode="date"
             onConfirm={onConfirm}

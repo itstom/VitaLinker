@@ -2,11 +2,38 @@
 import { MD2DarkTheme, MD2LightTheme, configureFonts } from 'react-native-paper';
 import darkLogo from '../assets/darkLogo.png';
 import lightLogo from '../assets/lightLogo.png';
+import { Fonts } from 'react-native-paper/lib/typescript/types';
+import { DefaultTheme as NavigationDefaultTheme, DarkTheme as NavigationDarkTheme } from '@react-navigation/native';
 
-const fontConfig = {
-  web: {
+export type ThemeColors = {
+  primary: string;
+  secondary: string;
+  surface: string;
+  background: string;
+  placeholder: string;
+  text: string;
+  error: string;
+  disabled: string;
+  backdrop: string;
+  notification: string;
+  tooltip: string;
+  onSurface: string; 
+};
+
+export type ThemeType = {
+  fonts: Fonts;
+  colors: ThemeColors;
+  dark: boolean;
+  logo: typeof darkLogo | typeof lightLogo;
+  isV3: boolean;
+  mode: 'adaptive';
+  version: 2;
+};
+
+export const fontConfig = {
+  default: {
     regular: {
-      fontFamily: 'acumin-pro-reg',
+      fontFamily: 'acumin-pro-regular',
       fontWeight: 'normal',
     },
     medium: {
@@ -22,88 +49,57 @@ const fontConfig = {
       fontWeight: 'normal',
     },
   },
-  ios: {
-    regular: {
-      fontFamily: 'acumin-pro-reg',
-      fontWeight: 'normal',
-    },
-    medium: {
-      fontFamily: 'acumin-pro-medium',
-      fontWeight: 'normal',
-    },
-    light: {
-      fontFamily: 'acumin-pro-light',
-      fontWeight: 'normal',
-    },
-    thin: {
-      fontFamily: 'acumin-pro-thin',
-      fontWeight: 'normal',
-    },
-  },
-  android: {
-    regular: {
-      fontFamily: 'acumin-pro-reg',
-      fontWeight: 'normal',
-    },
-    medium: {
-      fontFamily: 'acumin-pro-medium',
-      fontWeight: 'normal',
-    },
-    light: {
-      fontFamily: 'acumin-pro-light',
-      fontWeight: 'normal',
-    },
-    thin: {
-      fontFamily: 'acumin-pro-thin',
-      fontWeight: 'normal',
-    },
-  }
 } as const;
 
-
-export const lightTheme = {
+export const lightTheme: ThemeType = {
   ...MD2LightTheme,
-  fonts: configureFonts({config: fontConfig, isV3: false}),
+  ...NavigationDefaultTheme,
+  mode: 'adaptive',
+  version: 2,
   colors: {
     ...MD2LightTheme.colors,
     primary: "rgb(0, 141, 182)", // primary color for your interface
-    onPrimary: "rgb(0, 49, 95)", // color for content on primary color
-    primaryContainer: "rgb(0, 71, 135)", // lighter version of the primary color
-    onPrimaryContainer: "rgb(213, 227, 255)", // color for content on the primary container
-    secondary: "rgb(79, 216, 235)", // secondary color for your interface
-    onSecondary: "rgb(0, 54, 61)", // color for content on secondary color
-    secondaryContainer: "rgb(0, 79, 88)", // lighter version of the secondary color
-    onSecondaryContainer: "rgb(151, 240, 255)", // color for content on the secondary container
-    surface: 'black', // color for the surfaces of components
+    secondary: "rgb(0, 141, 182)", // secondary color for your interface
+    surface: "rgb(255, 255, 255)", // color for the surfaces of components
     background: "rgb(246, 246, 252)", // color for the background of your app
-    placeholder: "rgb(0, 27, 23)", // Input fields
-    text: "rgb(0, 27, 23)", // Color for Words
-
-  
+    placeholder: "rgb(120, 120, 120)", // Input fields
+    text: "rgb(0, 0, 0)", // Color for Words
+    error: "rgb(214, 0, 0)", // Color for errors
+    disabled: "rgb(170, 170, 170)", // Color for disabled elements
+    backdrop: "rgb(245, 245, 245)", // Color for backdrops of various components such as modals
+    notification: "rgb(0, 122, 255)", // Color for notifications
+    tooltip: "rgb(33, 33, 33)", // Color for tooltips
+    onSurface: "rgb(0, 0, 0)", // Color for content on surfaces
   },
   logo: lightLogo,
+  isV3: false,
+  fonts: configureFonts({config: fontConfig, isV3: false}) as Fonts,
 };
 
-export const darkTheme = {
+export const darkTheme: ThemeType = {
   ...MD2DarkTheme,
-  fonts: configureFonts({config: fontConfig, isV3: false}),
+  ...NavigationDarkTheme,
+  mode: 'adaptive',
+  version: 2,
   colors: {
     ...MD2DarkTheme.colors,
     primary: "rgb(0, 141, 182)", // primary color for your interface
-    onPrimary: "rgb(0, 49, 95)", // color for content on primary color
-    primaryContainer: "rgb(0, 71, 135)", // lighter version of the primary color
-    onPrimaryContainer: "rgb(213, 227, 255)", // color for content on the primary container
-    secondary: "rgb(79, 216, 235)", // secondary color for your interface
-    onSecondary: "rgb(0, 54, 61)", // color for content on secondary color
-    secondaryContainer: "rgb(0, 79, 88)", // lighter version of the secondary color
-    onSecondaryContainer: "rgb(151, 240, 255)", // color for content on the secondary container
-    surface: 'black', // color for the surfaces of components
+    secondary: "rgb(0, 141, 182)", // secondary color for your interface
+    surface: "rgb(18, 18, 18)", // color for the surfaces of components
     background: "rgb(13, 24, 33)", // color for the background of your app
-    placeholder: "rgb(168, 203, 225)", // Input fields
-    text: "rgb(105, 124, 141)", // Color for Words
+    placeholder: "rgb(120, 120, 120)", // Input fields
+    text: "rgb(255, 255, 255)", // Color for Words
+    error: "rgb(255, 61, 61)", // Color for errors
+    disabled: "rgb(120, 120, 120)", // Color for disabled elements
+    backdrop: "rgb(51, 51, 51)", // Color for backdrops of various components such as modals
+    notification: "rgb(0, 174, 255)", // Color for notifications
+    tooltip: "rgb(255, 255, 255)", // Color for tooltips
+    onSurface: "rgb(255, 255, 255)", // Color for content on surfaces
   },
   logo: darkLogo,
+  isV3: false,
+  fonts: configureFonts({config: fontConfig, isV3: false}) as Fonts,
 };
 
 // Define our custom theme type here:
-export type AppTheme = typeof lightTheme | typeof darkTheme;
+export type AppTheme = ThemeType;

@@ -7,13 +7,13 @@ import { DefaultTheme } from '@react-navigation/native';
 export type Theme = typeof lightTheme | typeof darkTheme;
 
 export interface ThemeState {
-  current: Theme;
+  current: 'light' | 'dark',
   dark: boolean;
 }
 
 // Define the initial state:
 const initialState: ThemeState = {
-  current: lightTheme,
+  current: 'light',
   dark: false,
 };
 
@@ -22,16 +22,21 @@ export const themeSlice = createSlice({
   initialState,
   reducers: {
     setTheme: (state, action: PayloadAction<Theme>) => {
-      state.current = action.payload;
-      state.dark = action.payload === darkTheme;
-    },
+      if (action.payload === darkTheme) {
+      state.current = 'dark';
+      state.dark = true;
+    } else {
+      state.current = 'light';
+      state.dark = false;
+        }
+      },
     toggleTheme: (state) => {
       console.log("Toggling theme");
       if (state.dark) {
-        state.current = lightTheme;
+        state.current = 'light';
         state.dark = false;
       } else {
-        state.current = darkTheme;
+        state.current = 'dark';
         state.dark = true;
       }
     },
@@ -41,19 +46,23 @@ export const themeSlice = createSlice({
 export const { setTheme, toggleTheme } = themeSlice.actions;
 
 export const persistTheme = (theme: 'light' | 'dark') => async (dispatch: any) => {
+  try {
   const themeToSet = theme === 'dark' ? darkTheme : lightTheme;
   dispatch(setTheme(themeToSet));
   await AsyncStorage.setItem('theme', theme);
+  } catch (error) {
+  console.error("Error persisting theme", error);
+  }
 };
 
 export const loadTheme = () => async (dispatch: any) => {
   const storedTheme = await AsyncStorage.getItem('theme');
-  if (storedTheme !== null) {
-    dispatch(setTheme(storedTheme === 'dark' ? darkTheme : lightTheme));
-  } else {
-    // Default to light theme if no theme was stored.
-    dispatch(setTheme(lightTheme));
-  }
+    if (storedTheme !== null) {
+  dispatch(setTheme(storedTheme === 'dark' ? darkTheme : lightTheme));
+    } else {
+  // Default to light theme if no theme was stored.
+  dispatch(setTheme(lightTheme));
+    }
 };
 
 // Helper function to transform your PaperTheme into react-navigation's Theme
@@ -67,7 +76,7 @@ const mapTheme = (theme: AppTheme): typeof DefaultTheme => {
       card: theme.colors.surface,
       text: theme.colors.text,
       border: theme.colors.placeholder,
-      notification: theme.colors.onPrimary,
+      notification: theme.colors.notification,
     }
   };
 };

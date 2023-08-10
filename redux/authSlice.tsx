@@ -1,5 +1,5 @@
 //redux/authSlice.tsx
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction, Slice } from '@reduxjs/toolkit';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
 type AuthState = {
@@ -123,7 +123,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = action.payload;
     },
-    logout: (state) => {
+    logoutUser: (state) => {
       state.isAuthenticated = false;
       state.user = null;
       state.error = null;

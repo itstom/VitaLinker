@@ -3,11 +3,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, TouchableOpacity, View } from 'react-native';
 import { Button, TextInput, ActivityIndicator } from 'react-native-paper';
 import { GuestStackNavigationProp, GuestStackParamList, GuestStackRouteProp, LoginScreenProps} from '../types/types';
-import { useNavigation } from '@react-navigation/native';
-
+import { NavigationProp, RouteProp, useNavigation } from '@react-navigation/native';
 import { SimpleUser } from '../redux/authSlice';
 import { Image } from 'react-native';
-import { RootState, useAppDispatch } from '../redux/store';
+import { RootState, useAppDispatch, useAppSelector } from '../redux/store';
 import { toggleTheme  } from '../redux/themeSlice';
 import Toast from 'react-native-toast-message';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
@@ -15,15 +14,17 @@ import { setPhoneVerificationStatus } from '../redux/userSlice';
 import { loginWithPhone } from '../redux/authSlice';
 import { useAuthService } from '../services/AuthService';
 import { useSelector } from 'react-redux';
-import getStyles from '../design/styles';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { loginUserSuccess } from '../redux/authSlice';
+import { lightTheme, darkTheme } from '../design/themes';
+import getStyles from '../design/styles';
+import appLogo from '../assets/logo01.png';
 
-type LoginScreenParams = {
-  Login?: {
+type LoginScreenRouteParams = {
+  Login: {
     email: string;
     password: string;
   };
@@ -50,7 +51,6 @@ const useLogin = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const { signIn} = useAuthService();
-  const theme = useSelector((state: RootState) => state.theme.current);
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
@@ -354,19 +354,21 @@ const handleCancelVerification = () => {
 };
 
 const LoginScreen: React.FC< LoginScreenProps > = ({ navigation, route }) => {
-  const theme = useSelector((state: RootState) => state.theme.current);
-  const themedStyles = getStyles(theme);
-  const logo = theme.logo;
-  const dispatch: ThunkDispatch<RootState, any, AnyAction> = useAppDispatch(); 
-  const { email, password } = (route.params as unknown as LoginScreenParams)?.Login || {};
+  const actualTheme = useAppSelector(state => state.theme.current === 'dark' ? darkTheme : lightTheme);
+  console.log('Current Theme:', actualTheme);
+  const themedStyles = getStyles(actualTheme);
+  const logoSource = actualTheme === darkTheme ? require('../assets/darkLogo.png') : require('../assets/lightLogo.png');
+  const dispatch = useAppDispatch(); 
   const { 
+    email,
+    password,
+    setEmail,
+    setPassword,
     phoneNumber,
     rawPhoneNumber,
     loading,
     handleLogin,
     handlePhoneNumberLogin,
-    setEmail,
-    setPassword,
     isLoginDisabled,
     setVerificationCode,
     handleCancelVerification,
@@ -385,13 +387,15 @@ const LoginScreen: React.FC< LoginScreenProps > = ({ navigation, route }) => {
   } = useLogin();
 
   const onToggleTheme = useCallback(() => {
+    console.log('Toggling theme');
     dispatch(toggleTheme());
   }, [dispatch]);
 
   const ThemeButton = (
-    <TouchableOpacity onPress={onToggleTheme} style={getStyles(theme).themeToggle}>
+    <TouchableOpacity onPress={onToggleTheme} style={themedStyles.themeToggle}>
         <Image 
-            source={theme.dark ? require('../assets/sun.png') : require('../assets/moon.png')}
+            key={actualTheme.dark ? 'dark' : 'light'}
+            source={actualTheme.dark ? require('../assets/sun.png') : require('../assets/moon.png')}
             style={{ width: 30, height: 30 }}
             onLoad={() => console.log('Image loaded')}
             onError={(error) => console.log('Error loading image:', error)}
@@ -400,15 +404,15 @@ const LoginScreen: React.FC< LoginScreenProps > = ({ navigation, route }) => {
 );
 
 const LoadingIndicator = (
-    <View style={getStyles(theme).overlayStyle}>
-        <ActivityIndicator size={'large'} color='#00b684' animating={true} />
+    <View style={getStyles(actualTheme).overlayStyle}>
+        <ActivityIndicator size={'large'} color={actualTheme.colors.notification} animating={true} />
     </View>
 );
 
 const LoginFormComponents = (
     <>
         <Image 
-            source={logo}
+            source={logoSource}
             resizeMode="contain"
             style={{ alignSelf: 'center', marginBottom: 20, width: '100%', height: 150 }}
         />
@@ -417,7 +421,7 @@ const LoginFormComponents = (
             value={email}
             onChangeText={setEmail}
             mode="outlined"
-            style={[themedStyles.input,{backgroundColor: theme.colors.background}]}
+            style={[themedStyles.input]}
         />
             <TextInput
             label="Password"
@@ -425,14 +429,14 @@ const LoginFormComponents = (
             onChangeText={setPassword}
             secureTextEntry={!isPasswordVisible}
             mode="outlined"
-            style={[themedStyles.input, {marginBottom: 10, backgroundColor: theme.colors.background }]}
+            style={[themedStyles.input,]}
             right={
            <TextInput.Icon 
             icon={() => 
                 <FontAwesome 
                     name={isPasswordVisible ? 'eye-slash' : 'eye'} 
                     size={20}
-                    color={theme.colors.text}
+                    color={actualTheme.colors.text}
                 />
             }
             onPress={togglePasswordVisibility}
@@ -447,11 +451,11 @@ const LoginFormComponents = (
             onSubmitEditing={handlePhoneNumberLogin}
             mode="outlined"
             keyboardType="phone-pad"
-            style={[themedStyles.input, {marginBottom: 15, backgroundColor: theme.colors.background }]}
+            style={[themedStyles.input]}
         />
         <Button mode="outlined" 
             onPress={handleLogin} 
-            style={[getStyles(theme).roundedButton, { marginBottom: 10 }]}
+            style={[getStyles(actualTheme).roundedButton, { marginBottom: 10 }]}
             disabled={isLoginDisabled}
         >
             Login
@@ -466,17 +470,17 @@ const PhoneVerificationComponents = (
             value={verificationCode}
             onChangeText={setVerificationCode}
             keyboardType='numeric'
-            style={{ marginBottom: 10, backgroundColor: theme.colors.background }}
+            style= {[themedStyles.input]}
         />
         <Button mode="contained" 
             onPress={handleVerifyCode} 
-            style={[getStyles(theme).roundedButton, { marginBottom: 10 }]}
+            style={[getStyles(actualTheme).roundedButton, { marginBottom: 10 }]}
         >
             Validate
         </Button>
         <Button mode="text" 
             onPress={handleCancelVerification} 
-            style={[getStyles(theme).roundedButton, { marginBottom: 10 }]}
+            style={[getStyles(actualTheme).roundedButton, { marginBottom: 10 }]}
         >
             Cancel Verification
         </Button>
@@ -491,7 +495,7 @@ const AdditionalButtons = (
 );
 
 return (
-    <View style={[getStyles(theme).containerStyle, { backgroundColor: theme.colors.background }]}>
+    <View style={[getStyles(actualTheme).containerStyle]}>
         {ThemeButton}
         {loading ? LoadingIndicator : (
             <>

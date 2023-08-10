@@ -1,4 +1,3 @@
-
 // NavigationRoutes.tsx
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -7,21 +6,19 @@ import RegisterScreen from '../screens/RegisterScreen';
 import ResetPasswordScreen from '../screens/ResetPassword';
 import VerifyEmailScreen from '../screens/VerifyEmailScreen';
 import { GuestStackParamList, UserStackParamList } from '../types/types';
-import { DrawerContentScrollView, DrawerItem, DrawerItemList } from '@react-navigation/drawer';
 import HomeScreen from '../screens/HomeScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import { useSelector } from 'react-redux';
-import { RootState } from '../redux/store';
-import { mapTheme } from '../redux/themeSlice';
-import { useNavigation } from '@react-navigation/native';
-import { useAppDispatch } from '../redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, useAppSelector } from '../redux/store';
+import { useWindowDimensions } from 'react-native';
+import { DrawerContentComponentProps, createDrawerNavigator } from '@react-navigation/drawer';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { Drawer as PaperDrawer } from 'react-native-paper';
 import { logoutUser } from '../redux/authSlice';
-import { View } from 'react-native';
-import { DrawerContentComponentProps } from '@react-navigation/drawer';
-import auth from '@react-native-firebase/auth';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-
+import { darkTheme } from '../design/themes';
+import { lightTheme } from '../design/themes';
 
 type NavigationRoutesProps = {
   isAuthenticated: boolean;
@@ -31,31 +28,14 @@ type UserNavigatorProps = {
   isAuthenticated: boolean;
 };
 
+type DrawerNavProp = DrawerNavigationProp<UserStackParamList, 'Home'>;
 
 const UserNavigatorWrapper = () => <UserNavigator isAuthenticated={true} />;
 const GuestNavigatorWrapper = () => <GuestNavigator isAuthenticated={false} />;
 
-
 const GuestStack = createStackNavigator<GuestStackParamList>();
 const UserDrawer = createDrawerNavigator<UserStackParamList>();
 const RootStack = createStackNavigator();
-
-function CustomDrawerContent(props: DrawerContentComponentProps) {
-  const navigation = useNavigation();
-  const dispatch = useAppDispatch();
-
-  const handleLogout = () => {
-    dispatch(logoutUser());
- };
- 
-  return (
-    <DrawerContentScrollView {...props} style={{ flex: 1 }}>
-      <DrawerItemList {...props} />
-      <View style={{ height: 1, backgroundColor: 'gray', marginVertical: 10 }}></View>
-      <DrawerItem label="Sign Out" onPress={handleLogout} />
-    </DrawerContentScrollView>
-  );
-}
 
 export const GuestNavigator: React.FC<NavigationRoutesProps> = ({ isAuthenticated }) => {
   return (
@@ -85,11 +65,67 @@ export const GuestNavigator: React.FC<NavigationRoutesProps> = ({ isAuthenticate
 };
 
 export const UserNavigator: React.FC<UserNavigatorProps> = ({ isAuthenticated }) => {
+  const themeType = useAppSelector((state: RootState) => state.theme.current);
+    // Based on the string value, get the appropriate theme object
+    const actualTheme = themeType === 'dark' ? darkTheme : lightTheme;
+    const dimensions = useWindowDimensions();
+    const CustomPaperDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
+    const dispatch = useDispatch();
+
+    const handleLogout = () => {
+      dispatch(logoutUser())
+        .then(() => {
+          // Navigate to the 'Login' screen in the 'Guest' stack
+          props.navigation.reset({
+            index: 0,
+            routes: [{ name: 'Guest' }],
+          });
+        })
+        .catch((error) => {
+          // Handle any potential error here
+          console.error(error);
+        });
+    };
+    
+    return (
+        <><PaperDrawer.Section title="Menu">
+        <PaperDrawer.Item
+          label="Home"
+          onPress={() => props.navigation.navigate('Home')} />
+        <PaperDrawer.Item
+          label="Dashboard"
+          onPress={() => props.navigation.navigate('Dashboard')} />
+        <PaperDrawer.Item
+          label="Settings"
+          onPress={() => props.navigation.navigate('Settings')} />
+      </PaperDrawer.Section><PaperDrawer.Section title="Sign Out">
+          <PaperDrawer.Item
+            label="Log out"
+            onPress={handleLogout} />
+        </PaperDrawer.Section></>
+    );
+  };
+
   return (
-    <UserDrawer.Navigator initialRouteName="Home" drawerContent={props => <CustomDrawerContent {...props} />}>
-      <UserDrawer.Screen name="Home">
-       {(props) => <HomeScreen {...props} />}
-      </UserDrawer.Screen>
+    <UserDrawer.Navigator 
+        initialRouteName="Home"
+        drawerContent={props => <CustomPaperDrawerContent {...props} />}
+        screenOptions={({ navigation }) => ({
+            headerStyle: {
+                backgroundColor: actualTheme.colors.primary,
+            },
+            headerTintColor: actualTheme.colors.text,
+            headerLeft: () => (
+                <Icon 
+                    name="bars" 
+                    size={25} 
+                    color={actualTheme.colors.text} 
+                    onPress={() => navigation.toggleDrawer()} 
+                />
+            )
+        })}
+    >
+      <UserDrawer.Screen name="Home" component={HomeScreen} />
       <UserDrawer.Screen name="Dashboard" component={DashboardScreen} />
       <UserDrawer.Screen name="Settings" component={SettingsScreen} />
     </UserDrawer.Navigator>
@@ -99,7 +135,7 @@ export const UserNavigator: React.FC<UserNavigatorProps> = ({ isAuthenticated })
 export const RootNavigator = () => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   return (
-    <RootStack.Navigator >
+    <RootStack.Navigator>
       { isAuthenticated ? (
           <RootStack.Screen name="Main" component={UserNavigatorWrapper} />
         )  : (
