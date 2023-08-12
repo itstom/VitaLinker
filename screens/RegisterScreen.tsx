@@ -15,7 +15,7 @@ import Toast from 'react-native-toast-message';
 import { userProfileUpdate }  from '../redux/userSlice';
 import getStyles from '../design/styles';
 import { darkTheme, lightTheme } from '../design/themes';
-import { loadTheme, persistTheme, toggleTheme } from '../redux/themeSlice';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 type navigationProp = StackNavigationProp<GuestStackParamList, 'Register'>;
 
@@ -93,54 +93,46 @@ const RegisterScreen: React.FC = () => {
   const handleRegister = async () => {
     try {
       console.log('Registering user...');
+      // 1. Check password matching
       if (password !== confirmPassword) {
-        Toast.show({
-          type: 'error',
-          position: 'bottom',
-          text1: 'Registration Error',
-          text2: 'Passwords do not match. Please check and try again.',
-        });
+        showToast('error', 'Passwords do not match. Please check and try again.');
         return;
       }
+      // 2. Dispatch registration action
       const actionResponse = await dispatch(registerUser({ email, password }));
-      console.log('actionResponse', actionResponse);  
-      if (actionResponse.payload && actionResponse.type === "auth/registerUser/fulfilled") {
-        const userPayload: UserPayloadType = actionResponse.payload;
-        const cleanUser = {
-          displayName: userPayload.displayName,
-          email: userPayload.email,
-          emailVerified: userPayload.emailVerified,
-          isAnonymous: userPayload.isAnonymous,
-          uid: userPayload.uid,
-        };
-        await dispatch(userProfileUpdate({
-          name,
-          lastName,
-          gender,
-          dateOfBirth,
-          phoneNumber,
-          disease,
-        }));
-        await dispatch(verifyEmail());
-        console.log('User registered successfully, dispatching verify email', cleanUser);
-        Toast.show({
-          type: 'success',
-          position: 'bottom',
-          text1: 'Registration Successful',
-          text2: 'A verification email has been sent to your email address.',
-        });
-        navigation.goBack();
+      console.log('actionResponse', actionResponse);
+      if (actionResponse.type !== "auth/registerUser/fulfilled" || !actionResponse.payload) {
+        throw new Error('Registration failed.'); 
       }
+      // 3. User profile update
+      await dispatch(userProfileUpdate({
+        name,
+        lastName,
+        gender,
+        dateOfBirth,
+        phoneNumber,
+        disease,
+      }));
+      // 4. Send email verification
+      await dispatch(verifyEmail());
+      console.log('User registered successfully, dispatching verify email');
+      showToast('success', 'A verification email has been sent to your email address.');
+      navigation.navigate('VerifyEmail');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred while registering. Please try again later.';
-      Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Registration Error',
-        text2: errorMessage,
-      });
+      showToast('error', errorMessage);
     }
   };
+  // Helper function to show toast messages
+  const showToast = (type: 'error' | 'success', message: string) => {
+    Toast.show({
+      type: type,
+      position: 'bottom',
+      text1: type === 'error' ? 'Registration Error' : 'Registration Successful',
+      text2: message,
+    });
+  };
+  
   
   const isValid = name && lastName && gender && email && password && confirmPassword && phoneNumber && disease && password === confirmPassword;
 
@@ -150,9 +142,12 @@ const RegisterScreen: React.FC = () => {
 
   return (
     <Provider>
-        <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={[themedStyles.centeredView, { backgroundColor: actualTheme.colors.background }]}
+        <KeyboardAwareScrollView
+            keyboardShouldPersistTaps='handled'
+            automaticallyAdjustContentInsets={true}
+            showsVerticalScrollIndicator={false}
+            resetScrollToCoords={{ x: 0, y: 0 }}
+            extraScrollHeight={10}
         >
             <ScrollView
             keyboardShouldPersistTaps='handled'
@@ -262,7 +257,7 @@ const RegisterScreen: React.FC = () => {
                     </Button>
                 </View>
             </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
     </Provider>
 );
 

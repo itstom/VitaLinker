@@ -1,5 +1,10 @@
 package com.unibe.vitalinker;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.os.Build;
 import android.os.Bundle;
+
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
@@ -19,6 +24,9 @@ public class MainActivity extends ReactActivity {
    @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(null);
+
+    // Call this method to create and setup the Notification Channel
+    createNotificationChannel();
   }
 
   /**
@@ -33,5 +41,21 @@ public class MainActivity extends ReactActivity {
         getMainComponentName(),
         // If you opted-in for the New Architecture, we enable the Fabric Renderer.
         DefaultNewArchitectureEntryPoint.getFabricEnabled());
+  }
+
+  private void createNotificationChannel() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      // Define the NotificationChannel
+      String channelId = "fcm_default_channel";
+      CharSequence name = "General Notifications";
+      String description = "This channel is used for general app notifications.";
+      int importance = NotificationManager.IMPORTANCE_DEFAULT;
+      NotificationChannel channel = new NotificationChannel(channelId, name, importance);
+      channel.setDescription(description);
+
+      // Register the channel with the system
+      NotificationManager notificationManager = getSystemService(NotificationManager.class);
+      notificationManager.createNotificationChannel(channel);
+    }
   }
 }

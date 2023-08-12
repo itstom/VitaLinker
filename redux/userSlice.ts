@@ -2,18 +2,15 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import auth from '@react-native-firebase/auth';
 import { User } from '../types/types';
-import { AppThunk } from './store';
 
 export interface UserState {
   currentUser: User | null;
-  isAuthenticated: boolean;
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
 }
 
 const initialState: UserState = {
   currentUser: null,
-  isAuthenticated: false,
   isEmailVerified: false,
   isPhoneVerified: false,
 };
@@ -24,11 +21,9 @@ const userSlice = createSlice({
   reducers: {
     setUser: (state, action: PayloadAction<User>) => {
       state.currentUser = action.payload;
-      state.isAuthenticated = true;
     },
     clearUser: (state) => {
       state.currentUser = null;
-      state.isAuthenticated = false;
     },
     setEmailVerified: (state, action: PayloadAction<boolean>) => {
       state.isEmailVerified = action.payload;
@@ -44,12 +39,10 @@ const userSlice = createSlice({
     builder
       .addCase(userProfileUpdate.fulfilled, (state, action) => {
         state.currentUser = action.payload;
-        state.isAuthenticated = true;
       })
       .addCase(userProfileUpdate.rejected, (state, action) => {
-        state.isAuthenticated = false;
+        console.log(action.error);
       });
-      // You can add other cases if needed
   },
 });
 

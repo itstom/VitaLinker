@@ -1,40 +1,52 @@
 // VerifyEmailScreen.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../redux/store';
-
-import { getAuth, User, sendEmailVerification } from 'firebase/auth';
+import { RootState, useAppSelector } from '../redux/store';
+import { getAuth, User, sendEmailVerification, reload } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { UserStackParamList } from '../types/types';
 import getStyles from '../design/styles';
-import { Theme } from '../redux/themeSlice';
 import { markEmailAsVerified } from '../redux/userSlice';
+import { darkTheme } from '../design/themes';
+import { lightTheme } from '../design/themes';
 
 const VerifyEmailScreen: React.FC = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector((state: RootState) => state.user);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const auth = getAuth();
   const user: User | null = auth.currentUser;
   const navigation = useNavigation<StackNavigationProp<UserStackParamList>>();
-  const theme: Theme = useSelector((state: RootState) => state.theme.current);
-  const styles = getStyles(theme);
+  const actualTheme = useAppSelector(state => state.theme.current === 'dark' ? darkTheme : lightTheme);
+  const themedStyles = getStyles(actualTheme);
+
+  const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
     if (user) {
-      auth.onAuthStateChanged((currentUser) => {
-        if (currentUser && currentUser.emailVerified) {
+      const verificationCheck = setInterval(async () => {
+        setIsChecking(true);
+
+        // Reload user to refresh emailVerified status
+        await reload(user);
+        
+        if (user.emailVerified) {
           console.log('User is verified!');
           dispatch(markEmailAsVerified());
           navigation.reset({
             index: 0,
             routes: [{ name: 'Home' }],
           });
+          clearInterval(verificationCheck);
         }
-      });
+        
+        setIsChecking(false);
+      }, 5000);
+
+      return () => clearInterval(verificationCheck); // Cleanup on unmount
     }
-  }, [user, dispatch, auth, navigation]);
+  }, [user, dispatch, navigation]);
 
   const handleResendVerificationEmail = () => {
     if (user) {
@@ -49,15 +61,16 @@ const VerifyEmailScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[getStyles(actualTheme).containerStyle]}>
       {isAuthenticated ? (
-        <Text style={styles.text}>Your email is verified. You can navigate to the next screen.</Text>
+        <Text style={[getStyles(actualTheme).text]}>Your email is verified. You can navigate to the next screen.</Text>
       ) : (
         <>
-          <Text style={styles.text}>Please verify your email to continue.</Text>
-          <TouchableOpacity style={[styles.button, styles.roundedButton]} onPress={handleResendVerificationEmail}>
-            <Text style={styles.text}>Resend Verification Email</Text>
+          <Text style={[getStyles(actualTheme).text]}>Please verify your email to continue.</Text>
+          <TouchableOpacity style={[getStyles(actualTheme).button]} onPress={handleResendVerificationEmail}>
+            <Text style={[getStyles(actualTheme).text]}>Resend Verification Email</Text>
           </TouchableOpacity>
+          {isChecking && <Text style={[getStyles(actualTheme).text]}>Checking for verification...</Text>}
         </>
       )}
     </View>
@@ -65,5 +78,3 @@ const VerifyEmailScreen: React.FC = () => {
 };
 
 export default VerifyEmailScreen;
-
-

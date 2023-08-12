@@ -13,6 +13,18 @@ import { DefaultTheme as NavigationDefaultTheme, DarkTheme as NavigationDarkThem
 import { DefaultTheme as PaperDefaultTheme, MD2DarkTheme as PaperDarkTheme } from 'react-native-paper';
 import merge from 'lodash/merge';
 import { lightTheme, darkTheme } from './design/themes';
+import PushNotification from "react-native-push-notification";
+
+PushNotification.configure({
+  onRegister: function (token) {
+    console.log("TOKEN:", token);
+  },
+  onNotification: function (notification) {
+    console.log("NOTIFICATION:", notification);
+  },
+  popInitialNotification: true,
+  requestPermissions: true,
+});
 
 const CombinedDefaultTheme = merge(NavigationDefaultTheme, PaperDefaultTheme, lightTheme, { mode: "adaptive" });
 const CombinedDarkTheme = merge(NavigationDarkTheme, PaperDarkTheme, darkTheme, { mode: "adaptive" });

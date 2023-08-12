@@ -32,6 +32,9 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }: { email: string; password: string; }, thunkAPI) => {
     try {
       const userCredential = await auth().signInWithEmailAndPassword(email, password);
+      if (userCredential.user && !userCredential.user.emailVerified) {
+        return thunkAPI.rejectWithValue('Email not verified. Please verify your email address.');
+      }
       return userCredential.user ? true : thunkAPI.rejectWithValue('Authentication failed.');
     } catch (error) {
       return thunkAPI.rejectWithValue((error as any).message || 'An error occurred during login.');
@@ -111,6 +114,28 @@ export const logoutUser = createAsyncThunk<void, void | undefined>(
   }
 );
 
+export const checkEmailVerification = createAsyncThunk(
+  'auth/checkEmailVerification',
+  async (_, thunkAPI) => {
+    try {
+      const currentUser = auth().currentUser;
+
+      if (currentUser) {
+        await currentUser.reload();  // This line refreshes the user object
+        if (currentUser.emailVerified) {
+          return true;
+        } else {
+          return thunkAPI.rejectWithValue('Email not yet verified.');
+        }
+      } else {
+        return thunkAPI.rejectWithValue('No user is currently logged in.');
+      }
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as any).message || 'An error occurred while checking email verification.');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -146,7 +171,8 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(registerUser.fulfilled, (state) => {
-        state.isAuthenticated = true;
+        state.isAuthenticated = false;
+        state.isEmailVerifying = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isAuthenticated = false;
@@ -161,6 +187,15 @@ const authSlice = createSlice({
       })
       .addCase(verifyEmail.rejected, (state, action) => {
         state.isEmailVerifying = false;
+        state.isAuthenticated = false;
+        state.error = action.payload as string;
+      })
+      .addCase(checkEmailVerification.fulfilled, (state) => {
+        state.isAuthenticated = true;
+        state.isEmailVerifying = false;
+      })
+      .addCase(checkEmailVerification.rejected, (state, action) => {
+        state.isEmailVerifying = true;
         state.isAuthenticated = false;
         state.error = action.payload as string;
       })

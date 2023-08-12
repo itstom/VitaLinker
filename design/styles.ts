@@ -16,14 +16,26 @@ type StyleType = {
   containerStyle: object;
   themeToggle: object;
   overlayStyle: object;
+  section: object;
+  themeToggleContainer: object;
+  title: object;
+  toggleText: object;
+  modalTitle: object;
+  picker: object;
+  datePicker: object;
+  notificationCard: object;
+  buttonText: object;
+  cancelButton: object;
 };
 
 const getStyles = (theme: AppTheme): StyleType => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    justifyContent: 'center',
     alignItems: 'center',
+    padding: 15,
+    paddingTop: 0,
+    paddingHorizontal: 25,
   },
   text: {
     color: theme.colors.text,
@@ -49,7 +61,7 @@ const getStyles = (theme: AppTheme): StyleType => ({
     height: 50,
     width: 250,
     alignSelf: 'center',
-    mode: 'outlined',
+    backgroundColor: theme.colors.secondary,
   },
   centeredView: {
     flex: 1,
@@ -111,6 +123,76 @@ const getStyles = (theme: AppTheme): StyleType => ({
     backgroundColor:theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  section: {
+    marginVertical: 10,
+    width: '100%',
+  },
+  themeToggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: theme.colors.text,
+  },
+  toggleText: {
+    fontSize: 16,
+    color: theme.colors.text,
+    marginLeft: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: theme.colors.text,
+  },
+  picker: {
+    height: 50,
+    width: 250,
+    alignSelf: 'center',
+    backgroundColor: theme.colors.secondary,
+    borderColor: theme.colors.primary,
+    borderWidth: 1,
+    borderRadius: 10,
+  },
+  datePicker: {
+    height: 50,
+    width: 250,
+    alignSelf: 'center',
+    backgroundColor: theme.colors.background,
+    borderColor: theme.colors.primary,
+    borderWidth: 1,
+    borderRadius: 10,
+  },
+  notificationCard: {
+    backgroundColor: theme.colors.primary,
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 10,
+    shadowColor: theme.colors.onSurface,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 2.62,
+    elevation: 4,
+  },
+    buttonText: {
+    color: theme.colors.onSurface,
+    fontWeight: 'bold',
+    fontSize: 18,
+    borderColor: theme.colors.primary,
+  },
+    cancelButton: {
+    backgroundColor: theme.colors.error,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
   },
 });
 

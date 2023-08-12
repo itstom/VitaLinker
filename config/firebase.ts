@@ -1,5 +1,6 @@
 //config/firebase.tsx
 import firebase from '@react-native-firebase/app';
+import messaging from '@react-native-firebase/messaging';
 
 export const initializeFirebase = async () => {
   try {
@@ -24,6 +25,27 @@ export const initializeFirebase = async () => {
     console.log('Apps after init:', firebase.apps);
   } catch (error) {
     console.error('Failed to initialize Firebase:', error);
+    throw error; // Rethrow the error so it can be caught and handled upstream
+  }
+};
+
+export const setupFirebaseMessaging = async () => {
+  try {
+    // Get the FCM token for this device
+    const token = await messaging().getToken();
+    console.log('Firebase messaging token:', token);
+
+    // Listen to whether the token changes
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      console.log('FCM Message Data:', remoteMessage.data);
+  });
+  
+  //Clean up functions
+  return () => {
+    unsubscribe();
+  };
+  } catch (error) {
+    console.error('Failed to setup Firebase messaging:', error);
     throw error; // Rethrow the error so it can be caught and handled upstream
   }
 };
