@@ -8,23 +8,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import SplashScreen from './screens/SplashScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import  {RootNavigator}  from './navigation/NavigationRoutes';
+import {RootNavigator} from './navigation/NavigationRoutes';
 import { DefaultTheme as NavigationDefaultTheme, DarkTheme as NavigationDarkTheme } from '@react-navigation/native';
 import { DefaultTheme as PaperDefaultTheme, MD2DarkTheme as PaperDarkTheme } from 'react-native-paper';
 import merge from 'lodash/merge';
 import { lightTheme, darkTheme } from './design/themes';
-import PushNotification from "react-native-push-notification";
-
-PushNotification.configure({
-  onRegister: function (token) {
-    console.log("TOKEN:", token);
-  },
-  onNotification: function (notification) {
-    console.log("NOTIFICATION:", notification);
-  },
-  popInitialNotification: true,
-  requestPermissions: true,
-});
+import messaging from '@react-native-firebase/messaging';
+import notifee from '@notifee/react-native';
 
 const CombinedDefaultTheme = merge(NavigationDefaultTheme, PaperDefaultTheme, lightTheme, { mode: "adaptive" });
 const CombinedDarkTheme = merge(NavigationDarkTheme, PaperDarkTheme, darkTheme, { mode: "adaptive" });
@@ -41,7 +31,6 @@ const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
   const theme = useAppSelector((state) => state.theme.current);
   const appliedTheme = theme === 'light' ? CombinedDefaultTheme : CombinedDarkTheme;
 
-
   useEffect(() => {
     dispatch(loadTheme());
 
@@ -54,7 +43,29 @@ const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
       await AsyncStorage.setItem('lastOpenedApp', Date.now().toString());
     };
     displaySplash();
-  }, [dispatch]);
+    
+        // Set up the listener for foreground FCM messages
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+          if (remoteMessage.notification) {
+            const { title = "Default Title", body = "Default Message" } = remoteMessage.notification;
+
+            const channelId = await notifee.createChannel({
+              id: 'default',
+              name: 'Default Channel',
+            });
+
+            await notifee.displayNotification({
+              title,
+              body,
+              android: {
+                channelId,
+              },
+            });
+          }
+        });
+
+        return unsubscribe;
+        }, [dispatch]);
 
   if (!isFirebaseInitialized) {
     return (
@@ -71,7 +82,7 @@ const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
   return (
     <Provider store={store}>
       <PaperProvider theme={appliedTheme}>
-      <NavigationContainer theme={theme === 'dark' ? CombinedDarkTheme : CombinedDefaultTheme}>
+        <NavigationContainer theme={theme === 'dark' ? CombinedDarkTheme : CombinedDefaultTheme}>
           <RootNavigator />
         </NavigationContainer>
       </PaperProvider>

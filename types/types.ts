@@ -30,6 +30,14 @@ export type UserStackParamList = {
   ResetPassword: undefined;
 };
 
+export type Notification = {
+  id: string;
+  type: string;
+  message: string;
+  date: Date;
+  isExpired: boolean;
+}
+
 export type LoginScreenProps = {
   navigation: StackNavigationProp<GuestStackParamList, 'Login'>;
   route: RouteProp<GuestStackParamList, 'Login'>;

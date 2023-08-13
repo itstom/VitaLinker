@@ -15,7 +15,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["@reduxjs/toolkit", "react", "jest"],
+    "types": ["@reduxjs/toolkit", "react", "jest", "@notifee/react-native"],
     "paths": {
       "*": ["src/types/*"]
     }

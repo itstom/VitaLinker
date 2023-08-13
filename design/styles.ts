@@ -26,6 +26,9 @@ type StyleType = {
   notificationCard: object;
   buttonText: object;
   cancelButton: object;
+  saveButton: object;
+  modalButton: object;
+  actionButton: object;
 };
 
 const getStyles = (theme: AppTheme): StyleType => ({
@@ -61,14 +64,14 @@ const getStyles = (theme: AppTheme): StyleType => ({
     height: 50,
     width: 250,
     alignSelf: 'center',
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: theme.colors.background,
   },
   centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 22,
-    backgroundColor: theme.colors.background,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   fieldContainer: {
     marginBottom: 10,
@@ -186,7 +189,7 @@ const getStyles = (theme: AppTheme): StyleType => ({
     color: theme.colors.onSurface,
     fontWeight: 'bold',
     fontSize: 18,
-    borderColor: theme.colors.primary,
+    borderColor: theme.colors.background,
   },
     cancelButton: {
     backgroundColor: theme.colors.error,
@@ -194,6 +197,27 @@ const getStyles = (theme: AppTheme): StyleType => ({
     borderRadius: 10,
     borderWidth: 1,
   },
+  saveButton: {
+    backgroundColor: theme.colors.background,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+    modalButton: {
+    marginVertical: 10,
+    padding: 15,
+    backgroundColor: theme.colors.background,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  actionButton: {
+    marginVertical: 10,
+    padding: 15,
+    backgroundColor: theme.colors.background,
+    borderRadius: 5,
+    alignItems: 'center',
+}
+
 });
 
 export default getStyles;

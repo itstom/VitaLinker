@@ -152,7 +152,23 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       state.error = null;
-    }
+    },
+    resetPasswordSuccess: (state) => {
+      state.isAuthenticated = true;
+      state.error = null;
+    },
+    resetPasswordFailure: (state, action: PayloadAction<string>) => {
+      state.isAuthenticated = false;
+      state.error = action.payload;
+    },
+    forgotPasswordSuccess: (state) => {
+      state.isAuthenticated = false;
+      state.error = null;
+    },
+    forgotPasswordFailure: (state, action: PayloadAction<string>) => {
+      state.isAuthenticated = false;
+      state.error = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -218,4 +234,4 @@ const authSlice = createSlice({
 
 export default authSlice.reducer;
 
-export const { loginUserSuccess, loginUserFailure } = authSlice.actions;
+export const { loginUserSuccess, loginUserFailure, resetPasswordSuccess, resetPasswordFailure } = authSlice.actions;

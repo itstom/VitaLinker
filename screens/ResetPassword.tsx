@@ -5,7 +5,7 @@ import { TextInput, Button, Title, Snackbar } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
 import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import { AppDispatch, RootState } from '../redux/store';
-import { resetPasswordSuccess, resetPasswordFailed } from '../redux/authSlice';
+import { resetPasswordSuccess, resetPasswordFailure } from '../redux/authSlice';
 
 const ResetPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -18,13 +18,11 @@ const ResetPasswordScreen: React.FC = () => {
       setSnackbarVisible(true);
       return;
     }
-  
     setIsLoading(true);
-  
     try {
         const auth = getAuth();
         await sendPasswordResetEmail(auth, email);
-        dispatch(resetPasswordSuccess('Reset password email sent')); // Dispatch success action with a custom message
+        dispatch(resetPasswordSuccess()); // Dispatch success action with a custom message
         setEmail('');
         setSnackbarVisible(true);
     } catch (error: any) { // error can be of any type
@@ -33,7 +31,7 @@ const ResetPasswordScreen: React.FC = () => {
         if (error && typeof error.message === 'string') {
             errorMessage = error.message;
         }
-        dispatch(resetPasswordFailed(errorMessage));
+        dispatch(resetPasswordFailure(errorMessage));
     } finally {
         setIsLoading(false);
     }
