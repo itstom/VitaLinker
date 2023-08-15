@@ -20,12 +20,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ route, navigation }) => {
   return (
     <View>
       <View style={{ padding: 20 }}>
-        <Text style={{ fontSize: 28, marginBottom: 10 }}>{`Welcome, ${user ? user.displayName: "Guest"}`}</Text>
+        <Text style={{ fontSize: 28, marginBottom: 10 }}>{`Bienvenido, ${user ? user.displayName: "Invitado"}`}</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Dashboard')}>
-          <Text style={{ fontSize: 20 }}>24h Average: {avg24h}</Text>
+          <Text style={{ fontSize: 20 }}>Últimas 24 horas: {avg24h}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Dashboard')}>
-          <Text style={{ fontSize: 20 }}>7d Average: {avg7d}</Text>
+          <Text style={{ fontSize: 20 }}>Esta semana: {avg7d}</Text>
         </TouchableOpacity>
       </View>
     </View>
