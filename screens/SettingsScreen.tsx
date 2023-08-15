@@ -180,7 +180,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
       <View style={themedStyles.container}>
           {/* Notification Settings */}
           <View style={themedStyles.section}>
-              <Text style={themedStyles.title}>Notifications</Text>
+              <Text style={themedStyles.title}>Notificaciones</Text>
               <Button title='Add Notification' onPress={openNotificationModal} />
               <Button title='See Notifications' onPress={openSeeNotificationsModal} />
   
@@ -192,7 +192,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                   onRequestClose={closeNotificationModal}
               >
                   <View style={themedStyles.centeredView}>
-                      <Text style={themedStyles.modalTitle}>Add New Notification</Text>
+                      <Text style={themedStyles.modalTitle}>Agregar Nuevas Notificaciones</Text>
                       <Picker
                           selectedValue={notificationType}
                           onValueChange={(itemValue) => setNotificationType(itemValue)}
@@ -242,13 +242,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                               scheduleLocalNotification(selectedDate);
                               closeNotificationModal();
                           }}>
-                          <Text style={themedStyles.buttonText}>Save</Text>
+                          <Text style={themedStyles.buttonText}>Guardar</Text>
                       </TouchableOpacity>
   
                       <TouchableOpacity 
                           style={themedStyles.cancelButton} 
                           onPress={closeNotificationModal}>
-                          <Text style={themedStyles.buttonText}>Cancel</Text>
+                          <Text style={themedStyles.buttonText}>Cancelar</Text>
                       </TouchableOpacity>
                   </View>
               </Modal>
@@ -261,7 +261,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                   onRequestClose={closeSeeNotificationsModal}
               >
                   <View style={themedStyles.centeredView}>
-                      <Text style={themedStyles.modalTitle}>All Notifications</Text>
+                      <Text style={themedStyles.modalTitle}>Todas las Notificaciones</Text>
                       <FlatList
                           data={sortedNotifications}
                           keyExtractor={(item) => item.id}
@@ -277,7 +277,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                       <TouchableOpacity 
                           style={themedStyles.cancelButton} 
                           onPress={closeSeeNotificationsModal}>
-                          <Text style={themedStyles.buttonText}>Close</Text>
+                          <Text style={themedStyles.buttonText}>Cerrar</Text>
                       </TouchableOpacity>
                   </View>
               </Modal>
@@ -290,7 +290,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                   onRequestClose={() => setActionsModalVisible(false)}
               >
                   <View style={themedStyles.centeredView}>
-                      <Text style={themedStyles.modalTitle}>Choose an action</Text>
+                      <Text style={themedStyles.modalTitle}>Seleccionar Acción</Text>
   
                       <TouchableOpacity 
                       style={themedStyles.actionButton}
@@ -300,7 +300,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                               setActionsModalVisible(false);
                           }
                       }}>
-                      <Text style={themedStyles.buttonText}>Edit</Text>
+                      <Text style={themedStyles.buttonText}>Editar</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity 
@@ -313,13 +313,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                             console.warn("No selected notification to delete.");
                         }
                       }}>
-                      <Text style={themedStyles.buttonText}>Delete</Text>
+                      <Text style={themedStyles.buttonText}>Eliminar</Text>
                   </TouchableOpacity>
 
                       <TouchableOpacity 
                           style={themedStyles.cancelButton} 
                           onPress={() => setActionsModalVisible(false)}>
-                          <Text style={themedStyles.buttonText}>Cancel</Text>
+                          <Text style={themedStyles.buttonText}>Cancelar</Text>
                       </TouchableOpacity>
                   </View>
               </Modal>
@@ -327,21 +327,21 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
   
           {/* Health Notifications */}
           <View style={themedStyles.section}>
-              <Text style={themedStyles.title}>Health Notifications</Text>
+              <Text style={themedStyles.title}>Notificaciones de Salud</Text>
               {/* ... */}
           </View>
   
           {/* Sensor Threshold Settings */}
           <View style={themedStyles.section}>
-              <Text style={themedStyles.title}>Sensor Threshold Settings</Text>
+              <Text style={themedStyles.title}>Configuración de Umbral del Sensor</Text>
               {/* ... */}
           </View>
   
           {/* Display Settings */}
           <View style={themedStyles.section}>
-              <Text style={themedStyles.title}>Display Settings</Text>
+              <Text style={themedStyles.title}>Configuración de Pantalla</Text>
               <View style={themedStyles.themeToggleContainer}>
-                  <Text style={themedStyles.toggleText}>Toggle Theme</Text>
+                  <Text style={themedStyles.toggleText}>Configuración de Tema</Text>
                   <Switch 
                       value={isDarkMode}
                       onValueChange={handleThemeToggle}
