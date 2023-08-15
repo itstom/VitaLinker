@@ -19,9 +19,9 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 
 type navigationProp = StackNavigationProp<GuestStackParamList, 'Register'>;
 
-const genderOptions = ['Male', 'Female', 'Other'];
-const diseaseOptions = ['Lupus', 'Rheumatoid arthritis', 'Type I diabetes'];
-
+const genderOptions = ['Male', 'Female', 'Other']; // ¿Debo traducirlo?
+const diseaseOptions = ['Lupus', 'Rheumatoid arthritis', 'Type I diabetes']; // ¿Debo traducirlo? Además, esto no representa nada. ¿Cambian los parámetros de acuerdo al tipo de enfermedad autoinmune? ¿Es realmente necesesario? Ten eso en cuenta porque nos pueden preguntar.
+// En caso de dejar este arreglo ^, quitar lo de la Diabetes. Es un poco más complicado de monitorizar con el producto que tenemos actualmente.
 const RegisterScreen: React.FC = () => {
   const navigation = useNavigation<navigationProp>();
   const dispatch = useDispatch();
@@ -95,7 +95,7 @@ const RegisterScreen: React.FC = () => {
       console.log('Registering user...');
       // 1. Check password matching
       if (password !== confirmPassword) {
-        showToast('error', 'Passwords do not match. Please check and try again.');
+        showToast('error', 'Passwords do not match. Please check and try again.'); // Se supone que esto se puede ver. Nunca sabes si nos pueden pedir una prueba de login o registro. Tenlo en cuenta.
         return;
       }
       // 2. Dispatch registration action
@@ -115,11 +115,11 @@ const RegisterScreen: React.FC = () => {
       }));
       // 4. Send email verification
       await dispatch(verifyEmail());
-      console.log('User registered successfully, dispatching verify email');
-      showToast('success', 'A verification email has been sent to your email address.');
+      console.log('User registered successfully, dispatching verify email'); // Traducir.
+      showToast('success', 'A verification email has been sent to your email address.'); // Traducir.
       navigation.navigate('VerifyEmail');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while registering. Please try again later.';
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred while registering. Please try again later.'; // Traducir.
       showToast('error', errorMessage);
     }
   };
@@ -128,7 +128,7 @@ const RegisterScreen: React.FC = () => {
     Toast.show({
       type: type,
       position: 'bottom',
-      text1: type === 'error' ? 'Registration Error' : 'Registration Successful',
+      text1: type === 'error' ? 'Registration Error' : 'Registration Successful', // Traducir.
       text2: message,
     });
   };
