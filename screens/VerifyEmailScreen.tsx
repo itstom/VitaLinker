@@ -63,14 +63,14 @@ const VerifyEmailScreen: React.FC = () => {
   return (
     <View style={[getStyles(actualTheme).containerStyle]}>
       {isAuthenticated ? (
-        <Text style={[getStyles(actualTheme).text]}>Your email is verified. You can navigate to the next screen.</Text>
+        <Text style={[getStyles(actualTheme).text]}> Tu correo electrónico ha sido verificado, puedes dirigirte a la siguiente pantalla.</Text>
       ) : (
         <>
-          <Text style={[getStyles(actualTheme).text]}>Please verify your email to continue.</Text>
+          <Text style={[getStyles(actualTheme).text]}>Por favor, verifica tu correo electrónico para continuar.</Text>
           <TouchableOpacity style={[getStyles(actualTheme).button]} onPress={handleResendVerificationEmail}>
-            <Text style={[getStyles(actualTheme).text]}>Resend Verification Email</Text>
+            <Text style={[getStyles(actualTheme).text]}>Reenviar Verificación de Correo Electrónico</Text>
           </TouchableOpacity>
-          {isChecking && <Text style={[getStyles(actualTheme).text]}>Checking for verification...</Text>}
+          {isChecking && <Text style={[getStyles(actualTheme).text]}>Revisando tu verificación...</Text>}
         </>
       )}
     </View>
