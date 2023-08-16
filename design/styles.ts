@@ -29,6 +29,8 @@ type StyleType = {
   saveButton: object;
   modalButton: object;
   actionButton: object;
+  rectangularButton: object;
+  rectangularButtonText: object;
 };
 
 const getStyles = (theme: AppTheme): StyleType => ({
@@ -216,7 +218,21 @@ const getStyles = (theme: AppTheme): StyleType => ({
     backgroundColor: theme.colors.background,
     borderRadius: 5,
     alignItems: 'center',
-}
+},
+      rectangularButton: {
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: 25,
+      paddingVertical: 10,
+      borderRadius: 5,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginVertical: 10,
+    },
+    rectangularButtonText: {
+      color: theme.colors.onSurface,
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
 
 });
 

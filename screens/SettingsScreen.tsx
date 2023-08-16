@@ -15,8 +15,14 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import Toast from 'react-native-toast-message';
 import { Notification } from '../types/types';
 import { set } from 'lodash';
+import notifee, {TriggerType} from '@notifee/react-native';
 
 interface SettingsScreenProps {}
+
+interface FirebaseTimestamp {
+    seconds: number;
+    nanoseconds: number;
+}
 
 const SettingsScreen: React.FC<SettingsScreenProps> = () => {
   const dispatch = useDispatch();
@@ -29,7 +35,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
   const [modalVisible, setModalVisible] = React.useState(false);
   const [notificationMessage, setNotificationMessage] = React.useState('');
   const [notificationType, setNotificationType] = React.useState('Medication Reminder');
-  const [selectedDate, setSelectedDate] = React.useState(new Date());
+  const [selectedDateTime, setSelectedDateTime] = React.useState(new Date());
   const [notifications, setNotifications] = React.useState<any[]>([]);
   const [showDatePicker, setShowDatePicker] = React.useState(false);
   const [isPickingTime, setIsPickingTime] = useState(false);
@@ -67,53 +73,44 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
     
 
       // For editing an existing notification
-      const openEditNotificationModal = (notification: { message: string; type: string; date: Date }) => {        setNotificationMessage(notification.message);
+      const openEditNotificationModal = (notification: { message: string; type: string; date: Date }) => {
+        setNotificationMessage(notification.message);
         setNotificationType(notification.type);
-        setSelectedDate(notification.date);
+        setSelectedDateTime(new Date(notification.date));
         setModalVisible(true);
-      };
+    };
 
+    const firebaseDateToJsDate = (timestamp: FirebaseTimestamp) => {
+        return new Date(timestamp.seconds * 1000);
+    };
+    
       // Sort the notifications by date
-    const sortedNotifications = notifications.sort((a, b) => {
-      if (a.date?.toDate() < b.date?.toDate()) return -1;
-      if (a.date?.toDate() > b.date?.toDate()) return 1;
-      return 0;
-  });
+      const sortedNotifications = notifications.sort((a, b) => {
+        const dateA = a.date ? firebaseDateToJsDate(a.date).getTime() : 0;
+        const dateB = b.date ? firebaseDateToJsDate(b.date).getTime() : 0;
+    
+        return dateA - dateB;
+    });
 
-  const handleDateChange = (event: DateTimePickerEvent, selectedDateTime?: Date) => {
-    if (event.type === 'set' && selectedDateTime) {  // Check if the user confirmed the selection and selectedDateTime exists
-        setSelectedDate(selectedDateTime);
-        if (!isPickingTime) {
-            // Modify only the date part of selectedDate
-            setSelectedDate(prevDate => {
-              return new Date(
-                  selectedDateTime.getFullYear(),
-                  selectedDateTime.getMonth(),
-                  selectedDateTime.getDate(),
-                  prevDate.getHours(),
-                  prevDate.getMinutes()
-              );
-          }
-          );
-            // Show the DateTimePicker again, but this time for picking the time
+  const handleDateChange = (event: any, selectedValue: any) => {
+    if (selectedValue) {
+        if (isPickingTime) {
+            const currentDate = new Date(selectedDateTime);
+            const newDate = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                currentDate.getDate(),
+                selectedValue.getHours(),
+                selectedValue.getMinutes()
+            );
+            setSelectedDateTime(newDate);
+            setShowDatePicker(false);
+        } else {
+            setSelectedDateTime(selectedValue);
             setIsPickingTime(true);
-            setShowDatePicker(true);
-        } else {
-            // Modify onlt the time part of selectedDate
-            setSelectedDate(prevDate => {
-              return new Date(
-                  prevDate.getFullYear(),
-                  prevDate.getMonth(),
-                  prevDate.getDate(),
-                  selectedDateTime.getHours(),
-                  selectedDateTime.getMinutes()
-              );
-              });
-            }
-        } else {
-        // Close the picker if the user canceled the selection and reset the isPickingTime flag
-        setShowDatePicker(false);  
-        setIsPickingTime(false);
+        }
+    } else {
+        setShowDatePicker(false);
     }
 };
 
@@ -142,14 +139,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
       setActionsModalVisible(true);
    };
   
-
     const saveNotificationToFirebase = async () => {
       try {
         const db = firebase.firestore();
         await db.collection("notifications").add({
           message: notificationMessage,
           type: notificationType,
-          date: firebase.firestore.Timestamp.fromDate(selectedDate),
+          date: firebase.firestore.Timestamp.fromDate(selectedDateTime),
         });
         console.log("Notification successfully written!");
       } catch (error) {
@@ -168,21 +164,37 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
       }
   };  
   
-    const scheduleLocalNotification = (date: Date) => {
-      PushNotification.localNotificationSchedule({
-        message: notificationMessage, // (required)
-        date: date, // in UTC-0
-        /* Any other properties here: https://github.com/zo0r/react-native-push-notification */
-      });
+      const scheduleLocalNotification = async (date: Date) => {
+        const channelId = await notifee.createChannel({
+          id: 'default',
+          name: 'Default Channel',
+        });
+
+        notifee.createTriggerNotification({
+          title: 'Scheduled Notification',
+          body: notificationMessage,
+          android: {
+            channelId,
+            smallIcon: 'ic_launcher',
+          },
+        },
+        {
+          type: TriggerType.TIMESTAMP,
+          timestamp: date.getTime(),
+        });
     };
 
     return (
       <View style={themedStyles.container}>
           {/* Notification Settings */}
           <View style={themedStyles.section}>
-              <Text style={themedStyles.title}>Notifications</Text>
-              <Button title='Add Notification' onPress={openNotificationModal} />
-              <Button title='See Notifications' onPress={openSeeNotificationsModal} />
+          <Text style={themedStyles.modalTitle}>Notifications</Text>
+            <TouchableOpacity style={themedStyles.rectangularButton} onPress={openNotificationModal}>
+            <Text style={themedStyles.rectangularButtonText}>Add Notification</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={themedStyles.rectangularButton} onPress={openSeeNotificationsModal}>
+            <Text style={themedStyles.rectangularButtonText}>See Notifications</Text>
+            </TouchableOpacity>
   
               {/* Add Notification Modal */}
               <Modal
@@ -213,7 +225,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
   
                       {showDatePicker && (
                           <DateTimePicker
-                              value={selectedDate}
+                              value={selectedDateTime}
                               mode={isPickingTime ? 'time' : 'date'}
                               is24Hour={true}
                               display='default'
@@ -222,24 +234,23 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                           />
                       )}
                       <Button 
-                          title={isPickingTime ? "Set Time" : (showDatePicker ? "Set Date" : "Choose Date")}
-                          onPress={() => {
-                              if (!showDatePicker || isPickingTime) {
-                                  setShowDatePicker(true);
-                                  setIsPickingTime(false);  // Start with picking date first
-                              } else {
-                                  setShowDatePicker(!showDatePicker);
-                                  setIsPickingTime(false);  // Reset just to be sure
-                              }
-                          }} 
-                          color={actualTheme.colors.primary} 
-                      />
+    title={isPickingTime ? "Set Time" : (showDatePicker ? "Set Date" : "Choose Date & Time")}
+    onPress={() => {
+        if (!showDatePicker || isPickingTime) {
+            setShowDatePicker(true);
+            setIsPickingTime(false);
+        } else {
+            setShowDatePicker(!showDatePicker);
+        }
+    }} 
+    color={actualTheme.colors.primary} 
+/>
   
                       <TouchableOpacity 
                           style={themedStyles.saveButton} 
                           onPress={() => {
                               saveNotificationToFirebase();
-                              scheduleLocalNotification(selectedDate);
+                              scheduleLocalNotification(selectedDateTime);
                               closeNotificationModal();
                           }}>
                           <Text style={themedStyles.buttonText}>Save</Text>
@@ -327,7 +338,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = () => {
   
           {/* Health Notifications */}
           <View style={themedStyles.section}>
-              <Text style={themedStyles.title}>Health Notifications</Text>
+              <Text style={themedStyles.title}>Health Alerts</Text>
               {/* ... */}
           </View>
   

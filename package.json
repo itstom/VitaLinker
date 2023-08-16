@@ -44,6 +44,7 @@
     "firebase": "^10.1.0",
     "react": "18.2.0",
     "react-native": "0.72.3",
+    "react-native-chart-kit": "^6.12.0",
     "react-native-easy-icon": "^1.0.10",
     "react-native-elements": "^3.4.3",
     "react-native-flipper": "^0.209.0",
@@ -65,7 +66,8 @@
     "react-redux": "^8.1.2",
     "redux": "^4.2.1",
     "redux-logger": "^3.0.6",
-    "redux-thunk": "^2.4.2"
+    "redux-thunk": "^2.4.2",
+    "serialport": "^11.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
