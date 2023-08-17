@@ -1,3 +1,4 @@
+//components/fetchSensorData.tsx
 import BleManager from 'react-native-ble-manager';
 import { Action, Dispatch } from 'redux';
 import { SensorState, updateSensorDataAction } from '../redux/sensorSlice';
@@ -7,9 +8,11 @@ import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 import { DeviceEventEmitter, Platform, NativeEventEmitter } from 'react-native';
 
 const MAX_HISTORY = 100;
+const SCAN_TIMEOUT_DURATION = 30000;
 const SERVICE_UUID = "0000180f-0000-1000-8000-00805f9b34fb";
 const TEMP_CHARACTERISTIC_UUID = "00002a6e-0000-1000-8000-00805f9b34fb";
 const DEVICE_ID = "66:55:7F:20:84:15"; 
+const eventEmitter = DeviceEventEmitter;
 
 interface Peripheral {
     id: string;
@@ -51,7 +54,6 @@ const parseData = (rawData: string): SensorState => {
 
 const requestBluetoothPermission = async () => {
     const status = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-  
     switch(status) {
       case RESULTS.GRANTED:
         return true;
@@ -71,57 +73,19 @@ const requestBluetoothPermission = async () => {
         return false;
     }
 };
-  
+
 export const initializeBleManager = () => {
     BleManager.start({ showAlert: false });
 };
 
-export const scanAndConnect = async (deviceId: string = DEVICE_ID): Promise<Peripheral | null> => {
-    const hasPermission = await requestBluetoothPermission();
-    if (!hasPermission) {
-        console.warn("Bluetooth permission is not granted.");
-        return null;
-    }
-
-    console.log('Starting device scan...');
-    let foundDevice: Peripheral | null = null;
-
-    const subscription = DeviceEventEmitter.addListener(
-        'BleManagerDiscoverPeripheral',
-        (peripheral: Peripheral) => {
-            console.log('Found device:', peripheral.name, peripheral.id);
-            if (peripheral.id === DEVICE_ID) {
-                foundDevice = peripheral;
-                BleManager.stopScan();
-            }
-        }
-    );
-    await BleManager.scan([], 20, true);
-
-    const scanTimeout = setTimeout(() => {
-        if (!foundDevice) {
-            BleManager.stopScan();
-            console.warn('Scan timeout reached. Stopping scan.');
-            subscription.remove();
-        }
-    }, 20000);
-
-    return foundDevice;
-};
-
-const fetchDataFromDevice = async (peripheral: Peripheral) => {
-    try {
-        const data = await BleManager.read(peripheral.id, SERVICE_UUID, TEMP_CHARACTERISTIC_UUID);
-        const rawData = Buffer.from(data).toString('ascii');
-        return parseData(rawData);
-    } catch (error) {
-        console.error("Failed to fetch data:", error);
-        return null;
-    }
-};
-
-export const startDataPolling = (intervalDuration = 5000, targetDeviceId: string = DEVICE_ID): ThunkAction<Promise<NodeJS.Timeout | undefined>, RootState, unknown, Action<string>> => {
+export const initializeAndStartPolling = (intervalDuration = 5000, targetDeviceId: string = DEVICE_ID): ThunkAction<Promise<NodeJS.Timeout | undefined>, RootState, unknown, Action<string>> => {
     return async (dispatch: Dispatch): Promise<NodeJS.Timeout | undefined> => {
+        const permissionGranted = await requestBluetoothPermission();
+        if (!permissionGranted) {
+            console.warn('Bluetooth permission not granted. Cannot proceed with scanning.');
+            return undefined;
+        }
+
         let peripheral: Peripheral | null;
         try {
             peripheral = await scanAndConnect(targetDeviceId);
@@ -149,6 +113,78 @@ export const startDataPolling = (intervalDuration = 5000, targetDeviceId: string
 
         return interval;
     };
+};
+
+const scanAndConnect = async (targetDeviceId: string): Promise<Peripheral | null> => {
+    let foundDevice: Peripheral | null = null;
+
+    // Subscribe to device discovery event
+    const handleDiscoverPeripheral = (peripheral: Peripheral) => {
+        if (peripheral.id === targetDeviceId) {
+            foundDevice = peripheral;
+            BleManager.stopScan();
+            subscription.remove();
+            clearTimeout(scanTimeout);
+
+            // Initiate a connection once the device is found
+            BleManager.connect(peripheral.id)
+                .then(() => {
+                    console.log(`Connected to device ${peripheral.id}`);
+                    // Optionally, you can discover services and characteristics here.
+                    // However, if you know the service and characteristic UUIDs, this step can be skipped.
+                    // BleManager.discoverAllServicesAndCharacteristicsForDevice(peripheral.id);
+                })
+                .catch(error => {
+                    console.warn('Failed to connect:', error);
+                });
+        }
+    };
+
+    // On Android, DeviceEventEmitter is used. On iOS, NativeEventEmitter with the BleManager instance is used.
+    const eventEmitter = DeviceEventEmitter;
+    const subscription = eventEmitter.addListener(
+        'BleManagerDiscoverPeripheral',
+        handleDiscoverPeripheral
+    );
+
+    await BleManager.scan([], 20, true);
+
+    const scanTimeout = setTimeout(() => {
+        if (!foundDevice) {
+            console.warn('Scan timeout reached. Stopping scan.');
+            BleManager.stopScan();
+            subscription.remove();
+            foundDevice = null;
+        }
+    }, SCAN_TIMEOUT_DURATION);    
+
+    return foundDevice;
+};
+
+const updateDataHistory = (history: any[], newValue: any): any[] => {
+    history.push(newValue);
+    if (history.length > MAX_HISTORY) {
+        history.shift();
+    }
+    return history;
+};
+
+const fetchDataFromDevice = async (peripheral: Peripheral) => {
+    try {
+        const data = await BleManager.read(peripheral.id, SERVICE_UUID, TEMP_CHARACTERISTIC_UUID);
+        const rawData = Buffer.from(data).toString('ascii');
+        const parsedData = parseData(rawData);
+
+        parsedData.temperatureHistory = updateDataHistory(parsedData.temperatureHistory, parsedData.temperature);
+        parsedData.locationHistory = updateDataHistory(parsedData.locationHistory, parsedData.location);
+        parsedData.heartRateHistory = updateDataHistory(parsedData.heartRateHistory, parsedData.heartRate);
+        parsedData.spo2History = updateDataHistory(parsedData.spo2History, parsedData.spo2);
+
+        return parsedData;
+    } catch (error) {
+        console.error("Failed to fetch data:", error);
+        return null;
+    }
 };
 
 export const stopDataPolling = (intervalId: any) => {

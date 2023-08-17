@@ -13,7 +13,7 @@ import { DefaultTheme as NavigationDefaultTheme, DarkTheme as NavigationDarkThem
 import { DefaultTheme as PaperDefaultTheme, MD2DarkTheme as PaperDarkTheme } from 'react-native-paper';
 import { lightTheme, darkTheme } from './design/themes';
 import messaging from '@react-native-firebase/messaging';
-import { startDataPolling, stopDataPolling } from './components/fetchSensorData';
+import { initializeAndStartPolling as startDataPolling, stopDataPolling } from './components/fetchSensorData';
 import notifee, { EventType } from '@notifee/react-native';
 
 const CombinedDefaultTheme = {
@@ -108,7 +108,7 @@ const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
 
     if (isFirebaseInitialized) {
       unsubscribe = initializeFirebaseListener();
-      dispatch(startDataPolling(5000)).then((interval) => {
+      dispatch(startDataPolling(5000)).then((interval: NodeJS.Timeout | undefined) => {
         intervalId = interval;
       });
     }
