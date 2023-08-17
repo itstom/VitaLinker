@@ -1,10 +1,32 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Required permissions for Firebase Cloud Messaging -->
+    <!-- Required permissions for Firebase Cloud Messaging & BLE operations-->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+
+        <queries>
+        <intent>
+            <action android:name="android.bluetooth.device.action.FOUND" />
+        </intent>
+        <intent>
+            <action android:name="android.bluetooth.le.action.DISCOVERY_STARTED" />
+        </intent>
+        <intent>
+            <action android:name="android.bluetooth.le.action.DISCOVERY_FINISHED" />
+        </intent>
+        </queries>
 
     <application
         android:name=".MainApplication"
@@ -23,11 +45,22 @@
             </intent-filter>
         </service>
 
+        <!-- Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCo357U6lVyC4vgkpYTcyEBy0x-lm24EN8"/>
+
         <!-- Default notification channel for FCM (required for Android 8.0 and above) -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="fcm_default_channel"
             tools:replace="android:value" />
+
+        <receiver android:name="VitaLinker" android:exported="true">
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.FOUND" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".MainActivity"
@@ -41,6 +74,5 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 </manifest>

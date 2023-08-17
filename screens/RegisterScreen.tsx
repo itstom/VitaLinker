@@ -19,8 +19,8 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 
 type navigationProp = StackNavigationProp<GuestStackParamList, 'Register'>;
 
-const genderOptions = ['Male', 'Female', 'Other'];
-const diseaseOptions = ['Lupus', 'Rheumatoid arthritis', 'Type I diabetes'];
+const genderOptions = ['Masculino', 'Femenino', 'Otro'];
+const diseaseOptions = ['Lupus', 'Artritis Reumatoide', 'Diabetes tipo 1'];
 
 const RegisterScreen: React.FC = () => {
   const navigation = useNavigation<navigationProp>();
@@ -95,7 +95,7 @@ const RegisterScreen: React.FC = () => {
       console.log('Registering user...');
       // 1. Check password matching
       if (password !== confirmPassword) {
-        showToast('error', 'Passwords do not match. Please check and try again.');
+        showToast('error', 'Las contraseñas no coinciden. Por favor, inténtelo de nuevo.');
         return;
       }
       // 2. Dispatch registration action
@@ -116,7 +116,7 @@ const RegisterScreen: React.FC = () => {
       // 4. Send email verification
       await dispatch(verifyEmail());
       console.log('User registered successfully, dispatching verify email');
-      showToast('success', 'A verification email has been sent to your email address.');
+      showToast('success', 'Se ha enviado un correo electrónico de verificación a su dirección de correo electrónico.');
       navigation.navigate('VerifyEmail');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred while registering. Please try again later.';
@@ -128,7 +128,7 @@ const RegisterScreen: React.FC = () => {
     Toast.show({
       type: type,
       position: 'bottom',
-      text1: type === 'error' ? 'Registration Error' : 'Registration Successful',
+      text1: type === 'error' ? 'Error de registro' : 'Registro realizado con éxito',
       text2: message,
     });
   };
@@ -181,7 +181,7 @@ const RegisterScreen: React.FC = () => {
             {renderMenu(
                 gender, setGender, 
                 genderMenuVisible, setGenderMenuVisible, 
-                genderOptions, "Select your gender",
+                genderOptions, "Seleccione su género",
             )}
             {renderDateInput(
                 "Date of Birth", dateOfBirth, 

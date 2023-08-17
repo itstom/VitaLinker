@@ -18,6 +18,8 @@ export type ThemeColors = {
   notification: string;
   tooltip: string;
   onSurface: string; 
+  card: string;
+  border: string;
 };
 
 export type ThemeType = {
@@ -70,6 +72,8 @@ export const lightTheme: ThemeType = {
     notification: "rgb(0, 122, 255)", // Color for notifications
     tooltip: "rgb(33, 33, 33)", // Color for tooltips
     onSurface: "rgb(0, 0, 0)", // Color for content on surfaces
+    card: "rgb(255, 255, 255)", // Color for cards
+    border: "rgb(224, 224, 224)", // Color for borders between different elements
   },
   logo: lightLogo,
   isV3: false,
@@ -95,6 +99,8 @@ export const darkTheme: ThemeType = {
     notification: "rgb(0, 174, 255)", // Color for notifications
     tooltip: "rgb(255, 255, 255)", // Color for tooltips
     onSurface: "rgb(255, 255, 255)", // Color for content on surfaces
+    card: "rgb(18, 18, 18)", // Color for cards
+    border: "rgb(51, 51, 51)", // Color for borders between different elements
   },
   logo: darkLogo,
   isV3: false,
