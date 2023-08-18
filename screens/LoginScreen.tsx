@@ -2,26 +2,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, TouchableOpacity, View } from 'react-native';
 import { Button, TextInput, ActivityIndicator } from 'react-native-paper';
-import { GuestStackNavigationProp, GuestStackParamList, GuestStackRouteProp, LoginScreenProps} from '../types/types';
-import { NavigationProp, RouteProp, useNavigation } from '@react-navigation/native';
+import { GuestStackParamList, LoginScreenProps} from '../types/types';
+import { useNavigation } from '@react-navigation/native';
 import { SimpleUser } from '../redux/authSlice';
 import { Image } from 'react-native';
-import { RootState, useAppDispatch, useAppSelector } from '../redux/store';
+import { useAppDispatch, useAppSelector } from '../redux/store';
 import { toggleTheme  } from '../redux/themeSlice';
 import Toast from 'react-native-toast-message';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { setPhoneVerificationStatus } from '../redux/userSlice';
 import { loginWithPhone } from '../redux/authSlice';
 import { useAuthService } from '../services/AuthService';
-import { useSelector } from 'react-redux';
-import { ThunkDispatch } from 'redux-thunk';
-import { AnyAction } from 'redux';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { loginUserSuccess } from '../redux/authSlice';
 import { lightTheme, darkTheme } from '../design/themes';
 import getStyles from '../design/styles';
-import appLogo from '../assets/logo01.png';
 
 type LoginScreenRouteParams = {
   Login: {
@@ -135,7 +131,7 @@ const useLogin = () => {
         Toast.show({
             type: 'error',
             position: 'bottom',
-            text1: 'Invalid credentials',
+            text1: 'Credenciales inválidas',
             visibilityTime: 4000,
             autoHide: true,
             topOffset: 30,
@@ -152,7 +148,7 @@ const useLogin = () => {
             const firebaseUser = await signIn(email, password);
             console.log("Firebase login success:", firebaseUser);
             if (!firebaseUser || !firebaseUser.email) {
-                throw new Error('No email associated with this user');
+                throw new Error('No hay email asociado a este usuario');
             }
             const user: SimpleUser = {
                 uid: firebaseUser.uid,
@@ -170,7 +166,7 @@ const useLogin = () => {
                     type: 'error',
                     position: 'top',
                     text1: 'Login Error',
-                    text2: 'Error occurred while processing login.',
+                    text2: 'Se ha producido un error al procesar el inicio de sesión.',
                     visibilityTime: 4000,
                     autoHide: true,
                     topOffset: 30,
@@ -182,22 +178,22 @@ const useLogin = () => {
             let errorMessage;
             switch (error.code) {
                 case 'auth/wrong-password':
-                    errorMessage = 'The password is invalid';
+                    errorMessage = 'La contraseña es inválida.';
                     handleInvalidCredentials(email);
                     break;
                 case 'auth/user-not-found':
-                    errorMessage = 'No account found with this email';
+                    errorMessage = 'No se ha encontrado ninguna cuenta con este correo electrónico.';
                     break;
                 case 'auth/too-many-requests':
-                    errorMessage = 'Too many login attempts. Please try again later.';
+                    errorMessage = 'Demasiados intentos de acceso. Vuelva a intentarlo más tarde.';
                     break;
                 default:
-                    errorMessage = 'Login failed. Please try again later.';
+                    errorMessage = 'Error al iniciar sesión. Vuelva a intentarlo más tarde.';
             }
             Toast.show({
                 type: 'error',
                 position: 'top',
-                text1: 'Login Error',
+                text1: 'Error al iniciar sesión',
                 text2: errorMessage,
                 visibilityTime: 4000,
                 autoHide: true,
@@ -212,8 +208,8 @@ const useLogin = () => {
       const handleMissingCredentials = () => {
           Toast.show({
               type: 'error',
-              position: 'bottom',
-              text1: 'Missing credentials',
+              position: 'top',
+              text1: 'Credenciales faltantes.',
               visibilityTime: 4000,
               autoHide: true,
               topOffset: 30,
@@ -229,7 +225,7 @@ const useLogin = () => {
           }
           cleaned = "+" + cleaned;
           if (!cleaned || isNaN(Number(cleaned))) {
-              Alert.alert('Error', 'Please enter a valid phone number');
+              Alert.alert('Error', 'Introduzca un número de teléfono válido.');
               return;
           }
           setIsPhoneVerifying(true);
@@ -284,7 +280,7 @@ const handleVerifyCode = async () => {
     Toast.show({
       type: 'error',
       position: 'top',
-      text1: 'Invalid code',
+      text1: 'Código inválido',
       visibilityTime: 3000,
       autoHide: true,
       topOffset: 30,
@@ -417,14 +413,14 @@ const LoginFormComponents = (
             style={{ alignSelf: 'center', marginBottom: 20, width: '100%', height: 150 }}
         />
         <TextInput
-            label="Email"
+            label="Correo electrónico"
             value={email}
             onChangeText={setEmail}
             mode="outlined"
             style={[themedStyles.input]}
         />
             <TextInput
-            label="Password"
+            label="Contraseña"
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!isPasswordVisible}
@@ -445,7 +441,7 @@ const LoginFormComponents = (
 />
 
         <TextInput
-            label="Phone Number"
+            label="Número de teléfono"
             value={formattedPhoneNumber}
             onChangeText={handlePhoneNumberChange}
             onSubmitEditing={handlePhoneNumberLogin}
@@ -458,7 +454,7 @@ const LoginFormComponents = (
             style={[getStyles(actualTheme).roundedButton, { marginBottom: 10 }]}
             disabled={isLoginDisabled}
         >
-            Login
+            Iniciar sesión
         </Button>
     </>
 );
@@ -466,7 +462,7 @@ const LoginFormComponents = (
 const PhoneVerificationComponents = (
     <>
         <TextInput
-            label="Verification Code"
+            label="Código de verificación"
             value={verificationCode}
             onChangeText={setVerificationCode}
             keyboardType='numeric'
@@ -476,21 +472,21 @@ const PhoneVerificationComponents = (
             onPress={handleVerifyCode} 
             style={[getStyles(actualTheme).roundedButton, { marginBottom: 10 }]}
         >
-            Validate
+            Validar
         </Button>
         <Button mode="text" 
             onPress={handleCancelVerification} 
             style={[getStyles(actualTheme).roundedButton, { marginBottom: 10 }]}
         >
-            Cancel Verification
+            Cancelar Verificación
         </Button>
     </>
 );
 
 const AdditionalButtons = (
     <>
-        <Button mode="text" onPress={() => navigation.navigate('ResetPassword')}>Forgot Password?</Button>
-        <Button mode="text" onPress={() => navigation.navigate('Register')}>Create a New Account</Button>
+        <Button mode="text" onPress={() => navigation.navigate('ResetPassword')}>¿Olvidó su contraseña?</Button>
+        <Button mode="text" onPress={() => navigation.navigate('Register')}>Crear una nueva cuenta</Button>
     </>
 );
 

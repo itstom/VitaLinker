@@ -5,6 +5,7 @@ import authReducer from './authSlice';
 import userReducer from './userSlice';
 import themeReducer from '../redux/themeSlice';
 import sensorReducer from '../redux/sensorSlice';
+import notificationReducer from '../redux/notificationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     user: userReducer,
     theme: themeReducer,
     sensor: sensorReducer,
+    notification: notificationReducer,
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({

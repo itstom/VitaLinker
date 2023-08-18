@@ -132,6 +132,7 @@ const getStyles = (theme: AppTheme): StyleType => ({
   section: {
     marginVertical: 10,
     width: '100%',
+    paddingBottom: 15,
   },
   themeToggleContainer: {
     flexDirection: 'row',
@@ -188,7 +189,7 @@ const getStyles = (theme: AppTheme): StyleType => ({
     elevation: 4,
   },
     buttonText: {
-    color: theme.colors.onSurface,
+    color: 'rgb(255, 255, 255)',
     fontWeight: 'bold',
     fontSize: 18,
     borderColor: theme.colors.background,
@@ -229,7 +230,7 @@ const getStyles = (theme: AppTheme): StyleType => ({
       marginVertical: 10,
     },
     rectangularButtonText: {
-      color: theme.colors.onSurface,
+      color: 'rgb(255, 255, 255)',
       fontWeight: 'bold',
       fontSize: 16,
     },

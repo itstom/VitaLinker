@@ -22,12 +22,12 @@ const ResetPasswordScreen: React.FC = () => {
     try {
         const auth = getAuth();
         await sendPasswordResetEmail(auth, email);
-        dispatch(resetPasswordSuccess()); // Dispatch success action with a custom message
+        dispatch(resetPasswordSuccess());
         setEmail('');
         setSnackbarVisible(true);
-    } catch (error: any) { // error can be of any type
+    } catch (error: any) { 
         console.log('Error sending reset password email:', error);
-        let errorMessage = 'An error occurred';
+        let errorMessage = 'Ha ocurrido un error.';
         if (error && typeof error.message === 'string') {
             errorMessage = error.message;
         }
@@ -39,23 +39,23 @@ const ResetPasswordScreen: React.FC = () => {
 
   return (
     <View>
-      <Title>Forgot Password</Title>
+      <Title>Olvidé mi contraseña</Title>
       <TextInput
-        label="Email"
+        label="Correo electrónico"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
       <Button mode="contained" onPress={handleResetPassword} loading={isLoading}>
-        Reset Password
+        Restablecer contraseña.
       </Button>
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
         duration={3000}
       >
-        Please enter your email.
+        Por favor, ingrese su correo electrónico.
       </Snackbar>
     </View>
   );

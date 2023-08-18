@@ -28,7 +28,6 @@ const VerifyEmailScreen: React.FC = () => {
       const verificationCheck = setInterval(async () => {
         setIsChecking(true);
 
-        // Reload user to refresh emailVerified status
         await reload(user);
         
         if (user.emailVerified) {
@@ -44,7 +43,7 @@ const VerifyEmailScreen: React.FC = () => {
         setIsChecking(false);
       }, 5000);
 
-      return () => clearInterval(verificationCheck); // Cleanup on unmount
+      return () => clearInterval(verificationCheck);
     }
   }, [user, dispatch, navigation]);
 
@@ -63,14 +62,14 @@ const VerifyEmailScreen: React.FC = () => {
   return (
     <View style={[getStyles(actualTheme).containerStyle]}>
       {isAuthenticated ? (
-        <Text style={[getStyles(actualTheme).text]}>Your email is verified. You can navigate to the next screen.</Text>
+        <Text style={[getStyles(actualTheme).text]}>Su correo electrónico está verificado.</Text>
       ) : (
         <>
-          <Text style={[getStyles(actualTheme).text]}>Please verify your email to continue.</Text>
+          <Text style={[getStyles(actualTheme).text]}>Verifique su correo electrónico para continuar.</Text>
           <TouchableOpacity style={[getStyles(actualTheme).button]} onPress={handleResendVerificationEmail}>
-            <Text style={[getStyles(actualTheme).text]}>Resend Verification Email</Text>
+            <Text style={[getStyles(actualTheme).text]}>Reenviar correo de verificación</Text>
           </TouchableOpacity>
-          {isChecking && <Text style={[getStyles(actualTheme).text]}>Checking for verification...</Text>}
+          {isChecking && <Text style={[getStyles(actualTheme).text]}>Comprobando la verificación...</Text>}
         </>
       )}
     </View>

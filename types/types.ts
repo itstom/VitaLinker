@@ -30,12 +30,31 @@ export type UserStackParamList = {
   ResetPassword: undefined;
 };
 
+export interface FirebaseTimestamp {
+  seconds: number;
+  nanoseconds: number;
+};
+
 export type Notification = {
   id: string;
   type: string;
+  title: string;
   message: string;
-  date: Date;
+  date: Date | FirebaseTimestamp; 
   isExpired: boolean;
+};
+
+export type Settings = {
+  id?: string;
+  isDarkMode: boolean;
+  isNotificationEnabled: boolean;
+  isNotificationSoundEnabled: boolean;
+  isNotificationVibrationEnabled: boolean;
+};
+
+export interface NotificationPickerProps {
+  isDarkMode: boolean;
+  handleThemeToggle: () => void;
 }
 
 export type LoginScreenProps = {

@@ -4,6 +4,7 @@
     "target": "esnext",
     "module": "commonjs",
     "lib": ["dom", "esnext"],
+    "allowSyntheticDefaultImports": true,
     "allowJs": true,
     "jsx": "react-native",
     "noEmit": true,
@@ -15,13 +16,15 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["@reduxjs/toolkit", "react", "jest", "@notifee/react-native"],
+    "types": ["react"],
+    "typeRoots": ["./types", "./node_modules/@types"],
     "paths": {
       "*": ["src/types/*"]
     }
   },
   "include": [
-    "**/*"
+    "**/*",
+    "types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

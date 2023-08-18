@@ -1,365 +1,268 @@
-// SettingsScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, Switch, Button, Modal, TextInput, FlatList, TouchableOpacity, Platform } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { RootState, useAppSelector } from '../redux/store';
-import getStyles from '../design/styles';
+import { Switch, View, Text, TouchableOpacity, Modal, Button, TextInput } from 'react-native';
+import { useTheme } from '@react-navigation/native';
+import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
+import { Settings, Notification } from '../types/types';
+import NotificationList from '../components/NotificationList';
+import SettingsControls from '../components/SettingsControls';
+import NotificationSettings from '../components/NotificationSettings';
 import { darkTheme } from '../design/themes';
 import { lightTheme } from '../design/themes';
+import { useDispatch, useSelector } from 'react-redux';
+import getStyles from '../design/styles';  
 import ThemeToggleButton, { onToggleTheme } from '../components/ThemeToggleButton';
-import { useDispatch } from 'react-redux';
-import firebase from '@react-native-firebase/app';
-import '@react-native-firebase/firestore';
-import PushNotification from 'react-native-push-notification';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import Toast from 'react-native-toast-message';
-import { Notification } from '../types/types';
-import { set } from 'lodash';
-import notifee, {TriggerType} from '@notifee/react-native';
+import { RootState, useAppSelector } from '../redux/store';
+import { setTheme } from '../redux/themeSlice';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DropDownPicker from 'react-native-dropdown-picker';
+import { addNotification } from '../redux/notificationSlice';
+import { v4 as uuidv4 } from 'uuid';
 
-interface SettingsScreenProps {}
-
-interface FirebaseTimestamp {
-    seconds: number;
-    nanoseconds: number;
-}
-
-const SettingsScreen: React.FC<SettingsScreenProps> = () => {
-  const dispatch = useDispatch();
-  const actualTheme = useAppSelector((state: RootState) => {
-    const type = state.theme.current;
-    return type === 'dark' ? darkTheme : lightTheme;
-  });
-  const themedStyles = getStyles(actualTheme);
-  const isDarkMode = actualTheme === darkTheme;
-  const [modalVisible, setModalVisible] = React.useState(false);
-  const [notificationMessage, setNotificationMessage] = React.useState('');
-  const [notificationType, setNotificationType] = React.useState('Medication Reminder');
-  const [selectedDateTime, setSelectedDateTime] = React.useState(new Date());
-  const [notifications, setNotifications] = React.useState<any[]>([]);
-  const [showDatePicker, setShowDatePicker] = React.useState(false);
-  const [isPickingTime, setIsPickingTime] = useState(false);
-  const [seeNotificationsModalVisible, setSeeNotificationsModalVisible] = React.useState(false);
-  const [actionsModalVisible, setActionsModalVisible] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  
-      // Fetch notifications from Firebase on mount
-      useEffect(() => {
-        const db = firebase.firestore();
-        db.collection("notifications").onSnapshot((snapshot) => {
-            const fetchedNotifications: { id: string, message: string, type: string, date: any }[] = [];
+const SettingsScreen: React.FC = () => {
+    const dispatch = useDispatch();
+    const actualTheme = useAppSelector((state: RootState) => {
+        const type = state.theme.current;
+        return type === 'dark' ? darkTheme : lightTheme;
+      });
+    const themedStyles = getStyles(actualTheme);
+    const isDarkMode = actualTheme === darkTheme;
+    const [modalVisible, setModalVisible] = React.useState(false);
+    const [seeNotificationsModalVisible, setSeeNotificationsModalVisible] = React.useState(false);
+    const [notificationDetails, setNotificationDetails] = useState({ title: '', message: '' }); //Revise this
+    const [isNotificationsModalVisible, setNotificationsModalVisible] = useState(false);
+    const [openDropdown, setOpenDropdown] = useState(false);
+    const [notificationType, setNotificationType] = useState<string>('defaultType');
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const notificationTypes = [
+        {label: 'Recordatorio de medicación', value: 'type1'},
+        {label: 'Recordatorio de cita', value: 'type2'},
+        {label: 'Recordatorio de Notificación de salud', value: 'type3'},
         
-            if (snapshot) {
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    // Check if data has necessary fields
-                    if (data.message && data.type) {
-                        fetchedNotifications.push({
-                          id: doc.id,
-                          ...data,
-                          date: data.date?.toDate(),
-                          message: '',
-                          type: '',
-                          ...data,
-                        });
-                    } else {
-                        console.warn("Invalid data format:", data);
-                    }
-                });
-            }
-            setNotifications(fetchedNotifications);
-        });      
-    }, []);
-    
-
-      // For editing an existing notification
-      const openEditNotificationModal = (notification: { message: string; type: string; date: Date }) => {
-        setNotificationMessage(notification.message);
-        setNotificationType(notification.type);
-        setSelectedDateTime(new Date(notification.date));
-        setModalVisible(true);
-    };
-
-    const firebaseDateToJsDate = (timestamp: FirebaseTimestamp) => {
-        return new Date(timestamp.seconds * 1000);
-    };
-    
-      // Sort the notifications by date
-      const sortedNotifications = notifications.sort((a, b) => {
-        const dateA = a.date ? firebaseDateToJsDate(a.date).getTime() : 0;
-        const dateB = b.date ? firebaseDateToJsDate(b.date).getTime() : 0;
-    
-        return dateA - dateB;
+    ];
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+    const [settings, setSettings] = useState<Settings>({
+        isNotificationEnabled : true,
+        isDarkMode: false,
+        isNotificationSoundEnabled: true,
+        isNotificationVibrationEnabled: true,
     });
 
-  const handleDateChange = (event: any, selectedValue: any) => {
-    if (selectedValue) {
-        if (isPickingTime) {
-            const currentDate = new Date(selectedDateTime);
-            const newDate = new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth(),
-                currentDate.getDate(),
-                selectedValue.getHours(),
-                selectedValue.getMinutes()
-            );
-            setSelectedDateTime(newDate);
-            setShowDatePicker(false);
-        } else {
-            setSelectedDateTime(selectedValue);
-            setIsPickingTime(true);
-        }
-    } else {
-        setShowDatePicker(false);
-    }
-};
+    useEffect(() => {
+        const db = firestore();
+        const unsubscribe = db.collection("notifications").onSnapshot((snapshot) => {
+            const fetchedNotifications: Notification[] = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (
+                    data.message && 
+                    data.type && 
+                    data.date && 
+                    typeof data.date === 'object' && 
+                    'seconds' in data.date && 
+                    'nanoseconds' in data.date
+                ) {
+                    fetchedNotifications.push({
+                        id: doc.id,
+                        ...data,
+                        date: new Date(data.date.seconds * 1000 + data.date.nanoseconds / 1000000),
+                        type: data.type || 'defaultType',
+                        message: data.message || 'defaultMessage',
+                        isExpired: false,
+                        title: data.title || 'defaultTitle'
+                    });
+                } else {
+                    console.warn("Invalid data format:", data);
+                }
+            });
+            setNotifications(fetchedNotifications);
+        });
+        return () => unsubscribe();
+    }, []);
 
-      const handleThemeToggle = (value: boolean) => {
+    const handleSettingsChange = async (newSettings: Settings) => {
+        // Update the local state first
+        setSettings(newSettings);
+    
+        // Now, update Firebase Firestore with the new settings
+        try {
+            const db = firestore();
+            
+            if (newSettings.id) {
+                await db.collection("userSettings").doc(newSettings.id).set(newSettings, { merge: true });
+                console.log('Settings updated successfully in Firestore');
+            } else {
+                console.warn('No user ID provided. Unable to update Firestore.');
+            }
+        } catch (error) {
+            console.error('Failed to update settings in Firestore:', error);
+        }
+    };    
+
+    const handleThemeToggle = (value: boolean) => {
+        console.log('Toggling theme...');
         onToggleTheme(dispatch, actualTheme);
       };
 
       const openNotificationModal = () => {
+        console.log('Opening modal...');
         setModalVisible(true);
       };
 
+      const addNotificationToFirestore = async (notificationDetails: FirebaseFirestoreTypes.DocumentData) => {
+        console.log('Adding notification to Firestore...');
+        const db = firestore();
+        await db.collection("notifications").add(notificationDetails);
+        // Close the modal and maybe show a success message
+      };
+    
+      const openSeeNotificationsModal = async () => {
+        console.log('Fetching notifications from Firestore...');
+        const notifications = await fetchNotificationsFromFirestore();
+      };
+
       const closeNotificationModal = () => {
+        console.log('Closing modal...');
         setModalVisible(false);
       };
       
-      const openSeeNotificationsModal = () => {
-        setSeeNotificationsModalVisible(true);
+      const fetchNotificationsFromFirestore = async () => {
+        console.log('Fetching notifications from Firestore...');
+        const db = firestore();
+        const snapshot = await db.collection("notifications").get();
+        return snapshot.docs.map(doc => doc.data());
+      };
+
+      const handleAddNotification = () => {
+        const newNotification  = {
+            id: uuidv4(),
+            type: notificationType,
+            title: notificationDetails.title,
+            message: notificationDetails.message,
+            date: selectedDate,
+        };
+        // Dispatch your Redux action here to add the notification
+        dispatch(addNotification(newNotification));
+        setNotificationsModalVisible(false);
     };
 
-      const closeSeeNotificationsModal = () => {
-        setSeeNotificationsModalVisible(false);
-    }; 
+    const showDatePicker = () => {
+        setDatePickerVisibility(true);
+    };
 
-    const openNotificationActionsModal = (notification: Notification) => {
-      setSelectedNotification(notification);
-      setActionsModalVisible(true);
-   };
-  
-    const saveNotificationToFirebase = async () => {
-      try {
-        const db = firebase.firestore();
-        await db.collection("notifications").add({
-          message: notificationMessage,
-          type: notificationType,
-          date: firebase.firestore.Timestamp.fromDate(selectedDateTime),
-        });
-        console.log("Notification successfully written!");
-      } catch (error) {
-        console.error("Error writing notification: ", error);
+    const hideDatePicker = () => {
+        setDatePickerVisibility(false);
+    };
+
+    const handleConfirmDate = (date: React.SetStateAction<Date>) => {
+        setSelectedDate(date);
+        hideDatePicker();
+    };
+
+    function SensorThresholdSetting() {
+        const [threshold, setThreshold] = useState<number>(0);
+      
+        return (
+          <div>
+            <h2>Ajustes del umbral del sensor</h2>
+            <input 
+              type="number" 
+              value={threshold} 
+              onChange={(e) => setThreshold(Number(e.target.value))}
+            />
+            <button onClick={() => saveThresholdToDB(threshold)}>Save</button>
+          </div>
+        );
       }
-    };
 
-    const deleteNotificationFromFirebase = async (notificationId: string) => {
-      try {
-          // Here you would use Firebase SDK to delete the notification
-          // For example (assuming you're using Firestore):
-          await firebase.firestore().collection('notifications').doc(notificationId).delete();
-          console.log('Notification deleted successfully');
-      } catch (error) {
-          console.error('Error deleting notification:', error);
+      function saveThresholdToDB(value: number) {
+        const db = firestore();
+        db.collection("sensorThresholds").doc("userThreshold").set({
+          value: value
+        });
       }
-  };  
-  
-      const scheduleLocalNotification = async (date: Date) => {
-        const channelId = await notifee.createChannel({
-          id: 'default',
-          name: 'Default Channel',
-        });
+      
 
-        notifee.createTriggerNotification({
-          title: 'Scheduled Notification',
-          body: notificationMessage,
-          android: {
-            channelId,
-            smallIcon: 'ic_launcher',
-          },
-        },
-        {
-          type: TriggerType.TIMESTAMP,
-          timestamp: date.getTime(),
-        });
-    };
+      return (
+        <View style={themedStyles.container}>
+            {/* Notification Settings Section */}
+            <View style={themedStyles.section}>
+                <Text style={themedStyles.modalTitle}>Notificaciones</Text>
+                <TouchableOpacity style={themedStyles.rectangularButton} onPress={openNotificationModal}>
+                    <Text style={themedStyles.rectangularButtonText}>Añadir notificación</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={themedStyles.rectangularButton} onPress={openSeeNotificationsModal}>
+                    <Text style={themedStyles.rectangularButtonText}>Ver notificaciones</Text>
+                </TouchableOpacity>
+                
+                {/* Add Notification Modal */}
+                <Modal
+        animationType="slide"
+        transparent={true}
+        visible={seeNotificationsModalVisible}
+        onRequestClose={() => setSeeNotificationsModalVisible(false)}
+    >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ width: '80%', backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
+                
+                {/* Notification Type DropDownPicker */}
+                <DropDownPicker
+                    open={openDropdown}
+                    value={notificationType}
+                    items={notificationTypes}
+                    setOpen={setOpenDropdown}
+                    setValue={setNotificationType}
+                />
 
-    return (
-      <View style={themedStyles.container}>
-          {/* Notification Settings */}
-          <View style={themedStyles.section}>
-          <Text style={themedStyles.modalTitle}>Notifications</Text>
-            <TouchableOpacity style={themedStyles.rectangularButton} onPress={openNotificationModal}>
-            <Text style={themedStyles.rectangularButtonText}>Add Notification</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={themedStyles.rectangularButton} onPress={openSeeNotificationsModal}>
-            <Text style={themedStyles.rectangularButtonText}>See Notifications</Text>
-            </TouchableOpacity>
-  
-              {/* Add Notification Modal */}
-              <Modal
-                  animationType='slide'
-                  transparent={true}
-                  visible={modalVisible}
-                  onRequestClose={closeNotificationModal}
-              >
-                  <View style={themedStyles.centeredView}>
-                      <Text style={themedStyles.modalTitle}>Add New Notification</Text>
-                      <Picker
-                          selectedValue={notificationType}
-                          onValueChange={(itemValue) => setNotificationType(itemValue)}
-                          style={themedStyles.picker}
-                      >
-                          <Picker.Item label='Medication Reminder' value='Medication Reminder' />
-                          <Picker.Item label='Appointment Reminder' value='Appointment Reminder' />
-                          <Picker.Item label='Health Notification' value='Health Notification' />
-                      </Picker>
-  
-                      <TextInput
-                          style={themedStyles.input}
-                          onChangeText={setNotificationMessage}
-                          value={notificationMessage}
-                          placeholder='Notification Message'
-                          placeholderTextColor={actualTheme.colors.text}
-                      />
-  
-                      {showDatePicker && (
-                          <DateTimePicker
-                              value={selectedDateTime}
-                              mode={isPickingTime ? 'time' : 'date'}
-                              is24Hour={true}
-                              display='default'
-                              onChange={handleDateChange}
-                              style={themedStyles.datePicker}
-                          />
-                      )}
-                      <Button 
-    title={isPickingTime ? "Set Time" : (showDatePicker ? "Set Date" : "Choose Date & Time")}
-    onPress={() => {
-        if (!showDatePicker || isPickingTime) {
-            setShowDatePicker(true);
-            setIsPickingTime(false);
-        } else {
-            setShowDatePicker(!showDatePicker);
-        }
-    }} 
-    color={actualTheme.colors.primary} 
-/>
-  
-                      <TouchableOpacity 
-                          style={themedStyles.saveButton} 
-                          onPress={() => {
-                              saveNotificationToFirebase();
-                              scheduleLocalNotification(selectedDateTime);
-                              closeNotificationModal();
-                          }}>
-                          <Text style={themedStyles.buttonText}>Save</Text>
-                      </TouchableOpacity>
-  
-                      <TouchableOpacity 
-                          style={themedStyles.cancelButton} 
-                          onPress={closeNotificationModal}>
-                          <Text style={themedStyles.buttonText}>Cancel</Text>
-                      </TouchableOpacity>
-                  </View>
-              </Modal>
-  
-              {/* See Notifications Modal */}
-              <Modal
-                  animationType='slide'
-                  transparent={true}
-                  visible={seeNotificationsModalVisible}
-                  onRequestClose={closeSeeNotificationsModal}
-              >
-                  <View style={themedStyles.centeredView}>
-                      <Text style={themedStyles.modalTitle}>All Notifications</Text>
-                      <FlatList
-                          data={sortedNotifications}
-                          keyExtractor={(item) => item.id}
-                          renderItem={({ item }) => (
-                              <TouchableOpacity
-                                  onPress={() => openNotificationActionsModal(item)}
-                                  style={themedStyles.notificationCard}
-                              >                        
-                                  <Text>{item.type}: {item.message}: {item.date?.toDate().toLocaleString()}</Text>
-                              </TouchableOpacity>
-                          )}
-                      />
-                      <TouchableOpacity 
-                          style={themedStyles.cancelButton} 
-                          onPress={closeSeeNotificationsModal}>
-                          <Text style={themedStyles.buttonText}>Close</Text>
-                      </TouchableOpacity>
-                  </View>
-              </Modal>
-  
-              {/* Notification Actions Modal */}
-              <Modal
-                  animationType='slide'
-                  transparent={true}
-                  visible={actionsModalVisible}
-                  onRequestClose={() => setActionsModalVisible(false)}
-              >
-                  <View style={themedStyles.centeredView}>
-                      <Text style={themedStyles.modalTitle}>Choose an action</Text>
-  
-                      <TouchableOpacity 
-                      style={themedStyles.actionButton}
-                      onPress={() => {
-                          if (selectedNotification) {
-                              openEditNotificationModal(selectedNotification); 
-                              setActionsModalVisible(false);
-                          }
-                      }}>
-                      <Text style={themedStyles.buttonText}>Edit</Text>
-                  </TouchableOpacity>
+                <Button title="Pick Date & Time" onPress={showDatePicker} />
 
-                  <TouchableOpacity 
-                      style={themedStyles.actionButton}
-                      onPress={() => {
-                        if (selectedNotification) {
-                            deleteNotificationFromFirebase(selectedNotification.id);
-                            setActionsModalVisible(false);
-                        } else {
-                            console.warn("No selected notification to delete.");
-                        }
-                      }}>
-                      <Text style={themedStyles.buttonText}>Delete</Text>
-                  </TouchableOpacity>
+                <DateTimePickerModal
+                    isVisible={isDatePickerVisible}
+                    mode="datetime"
+                    onConfirm={handleConfirmDate}
+                    onCancel={hideDatePicker}
+                />
 
-                      <TouchableOpacity 
-                          style={themedStyles.cancelButton} 
-                          onPress={() => setActionsModalVisible(false)}>
-                          <Text style={themedStyles.buttonText}>Cancel</Text>
-                      </TouchableOpacity>
-                  </View>
-              </Modal>
-          </View>
-  
-          {/* Health Notifications */}
-          <View style={themedStyles.section}>
-              <Text style={themedStyles.title}>Health Alerts</Text>
-              {/* ... */}
-          </View>
-  
-          {/* Sensor Threshold Settings */}
-          <View style={themedStyles.section}>
-              <Text style={themedStyles.title}>Sensor Threshold Settings</Text>
-              {/* ... */}
-          </View>
-  
-          {/* Display Settings */}
-          <View style={themedStyles.section}>
-              <Text style={themedStyles.title}>Display Settings</Text>
-              <View style={themedStyles.themeToggleContainer}>
-                  <Text style={themedStyles.toggleText}>Toggle Theme</Text>
-                  <Switch 
+                <Button 
+                    title="Añadir" 
+                    onPress={handleAddNotification}
+                />
+                <Button 
+                    title="Cancelar" 
+                    onPress={() => setSeeNotificationsModalVisible(false)}
+                />
+            </View>
+        </View>
+    </Modal>
+                
+            </View>
+    
+            {/* Notification Settings Section */}
+            <View style={themedStyles.section}>
+                <Text style={themedStyles.title}>Ajustes de notificación</Text>
+                <NotificationSettings settings={settings} onSettingsChange={handleSettingsChange} />
+            </View>
+                    
+            {/* Notification List Section */}
+            <View style={themedStyles.section}>
+                <Text style={themedStyles.title}>Ajustes del umbral del sensor</Text>
+                <NotificationList notifications={notifications} />
+            </View>
+    
+            {/* Display Settings Section */}
+            <View style={themedStyles.section}>
+                <Text style={themedStyles.title}>Ajustes de pantalla</Text>
+                <View style={themedStyles.themeToggleContainer}>
+                    <Text style={themedStyles.toggleText}>Cambiar tema</Text>
+                    <Switch 
                       value={isDarkMode}
-                      onValueChange={handleThemeToggle}
-                  />
-              </View>
-          </View>
-      </View>
-  );  
-}
-export default SettingsScreen;
+                      onValueChange={(value) => handleThemeToggle(value)}
+                    />
+                </View>
+            </View>
+        </View>
+    );     
+    };
+    
+    
+    export default SettingsScreen;

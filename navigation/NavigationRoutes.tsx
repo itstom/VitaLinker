@@ -88,19 +88,19 @@ export const UserNavigator: React.FC<UserNavigatorProps> = ({ isAuthenticated })
     };
     
     return (
-        <><PaperDrawer.Section title="Menu">
+        <><PaperDrawer.Section title="Navegación">
         <PaperDrawer.Item
-          label="Home"
+          label="Inicio"
           onPress={() => props.navigation.navigate('Home')} />
         <PaperDrawer.Item
-          label="Dashboard"
+          label="Tablero"
           onPress={() => props.navigation.navigate('Dashboard')} />
         <PaperDrawer.Item
-          label="Settings"
+          label="Configuraciones"
           onPress={() => props.navigation.navigate('Settings')} />
-      </PaperDrawer.Section><PaperDrawer.Section title="Sign Out">
+      </PaperDrawer.Section><PaperDrawer.Section title="Cerrar sesión">
           <PaperDrawer.Item
-            label="Log out"
+            label="Salir"
             onPress={handleLogout} />
         </PaperDrawer.Section></>
     );

@@ -11,6 +11,7 @@ export type SensorState = {
   temperature: number;
   temperatureHistory: number[];
   temperatureTimestamps: string[];
+  temperatureThreshold: number;
 
   // Location
   location: string;
@@ -42,6 +43,7 @@ export const initialState: SensorState = {
   temperature: 0,
   temperatureHistory: [],
   temperatureTimestamps: [],
+  temperatureThreshold: 0,
 
   // Location
   location: '',

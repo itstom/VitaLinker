@@ -1,0 +1,3 @@
+//android/MyLibraryModule/build.gradle
+configurations.maybeCreate("default")
+artifacts.add("default", file('libs/usbserial-6.0.5-release.aar'))

@@ -1,9 +1,9 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
 //android/build.gradle
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext {
         buildToolsVersion = "33.0.0"
-        minSdkVersion = 21
+        minSdkVersion = 23
         compileSdkVersion = 33
         targetSdkVersion = 33
 
@@ -14,6 +14,8 @@ buildscript {
         google()
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+
     }
     dependencies {
         classpath("com.android.tools.build:gradle")

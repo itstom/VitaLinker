@@ -16,6 +16,7 @@ import { userProfileUpdate }  from '../redux/userSlice';
 import getStyles from '../design/styles';
 import { darkTheme, lightTheme } from '../design/themes';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type navigationProp = StackNavigationProp<GuestStackParamList, 'Register'>;
 
@@ -159,7 +160,7 @@ const RegisterScreen: React.FC = () => {
         <View style={themedStyles.centeredView}>
 
             {renderTextInput({
-                label: "Name",
+                label: "Nombre",
                 value: name,
                 setter: setName,
                 ref: nameInputRef,
@@ -169,7 +170,7 @@ const RegisterScreen: React.FC = () => {
                 focusOffset: 1
             })}
             {renderTextInput({
-                label: "Last Name",
+                label: "Apellido",
                 value: lastName,
                 setter: setLastName,
                 ref: lastNameInputRef,
@@ -184,7 +185,7 @@ const RegisterScreen: React.FC = () => {
                 genderOptions, "Seleccione su género",
             )}
             {renderDateInput(
-                "Date of Birth", dateOfBirth, 
+                "Fecha de Nacimiento", dateOfBirth, 
                 showDatePicker
             )}
             {renderDatePicker(
@@ -192,7 +193,7 @@ const RegisterScreen: React.FC = () => {
                 hideDatePicker
             )}
             {renderTextInput({
-                label: "Email",
+                label: "Correo Electrónico",
                 value: email,
                 setter: setEmail,
                 ref: emailInputRef,
@@ -203,7 +204,7 @@ const RegisterScreen: React.FC = () => {
                 style: [ themedStyles.input, { backgroundColor: actualTheme.colors.background }]
             })}
             {renderTextInput({
-                label: "Phone Number",
+                label: "Número de Teléfono",
                 value: phoneNumber,
                 setter: setPhoneNumber,
                 ref: phoneNumberInputRef,
@@ -214,7 +215,7 @@ const RegisterScreen: React.FC = () => {
                 style: [ themedStyles.input, { backgroundColor: actualTheme.colors.background }]
             })}
             {renderTextInput({
-                label: "Password",
+                label: "Contraseña",
                 value: password,
                 setter: setPassword,
                 ref: passwordInputRef,
@@ -225,7 +226,7 @@ const RegisterScreen: React.FC = () => {
                 style: [ themedStyles.input, { backgroundColor: actualTheme.colors.background }]
             })}
             {renderTextInput({
-                label: "Confirm Password",
+                label: "Confirme Contraseña",
                 value: confirmPassword,
                 setter: setConfirmPassword,
                 ref: confirmPasswordInputRef,
@@ -238,7 +239,7 @@ const RegisterScreen: React.FC = () => {
             {renderMenu(
                 disease, setDisease, 
                 diseaseMenuVisible, setDiseaseMenuVisible, 
-                diseaseOptions, "Select your condition"
+                diseaseOptions, "Seleccione su afección"
             )}
                     <Button 
                         mode="contained" 

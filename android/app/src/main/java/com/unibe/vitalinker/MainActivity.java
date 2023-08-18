@@ -1,10 +1,9 @@
 package com.unibe.vitalinker;
-
+import com.melihyarikkaya.rnserialport.RNSerialportPackage;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 import android.os.Bundle;
-
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
