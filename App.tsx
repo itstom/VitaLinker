@@ -13,8 +13,8 @@ import { DefaultTheme as PaperDefaultTheme, MD2DarkTheme as PaperDarkTheme } fro
 import { lightTheme, darkTheme } from './design/themes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeFirebase, setupFirebaseMessaging } from './config/firebase';
-import { RNSerialport, definitions } from 'react-native-serialport';
-import { setupListeners, cleanupListeners } from './components/fetchUSBData'
+import notifee, { EventType } from '@notifee/react-native';
+import messaging from '@react-native-firebase/messaging';
 
 const CombinedDefaultTheme = {
   ...NavigationDefaultTheme,
@@ -36,13 +36,9 @@ const CombinedDarkTheme = {
   },
 };
 
-interface AppProps {
-  isFirebaseInitialized: boolean;
-}
-
 const SPLASH_DISPLAY_INTERVAL = 1000 * 60 * 30;
 
-const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
+const App: React.FC<{ isFirebaseInitialized: boolean }> = ({ isFirebaseInitialized }) => {
   const [showSplash, setShowSplash] = useState(false);
   const dispatch = useAppDispatch();
   const reduxTheme = useAppSelector((state) => state.theme.current);
@@ -50,47 +46,53 @@ const App: React.FC<AppProps> = ({ isFirebaseInitialized }) => {
   const appliedThemePreference = reduxTheme || systemThemePreference || 'light';
   const appliedTheme = appliedThemePreference === 'dark' ? CombinedDarkTheme : CombinedDefaultTheme;
 
-  const displaySplash = async () => {
-    const lastOpened = await AsyncStorage.getItem('lastOpenedApp');
-    if (!lastOpened || Date.now() - parseInt(lastOpened) > SPLASH_DISPLAY_INTERVAL) {
-      setShowSplash(true);
-      setTimeout(() => setShowSplash(false), 4000);
-    }
-    await AsyncStorage.setItem('lastOpenedApp', Date.now().toString());
-  };
-
   useEffect(() => {
     dispatch(loadTheme());
+
+    // Splash display logic
+    const displaySplash = async () => {
+      const lastOpened = await AsyncStorage.getItem('lastOpenedApp');
+      if (!lastOpened || Date.now() - parseInt(lastOpened) > SPLASH_DISPLAY_INTERVAL) {
+        setShowSplash(true);
+        setTimeout(() => setShowSplash(false), 4000);
+      }
+      await AsyncStorage.setItem('lastOpenedApp', Date.now().toString());
+    };
+    
     displaySplash();
 
     if (isFirebaseInitialized) {
-        initializeFirebase();
-        setupFirebaseMessaging();
+      initializeFirebase();
+      setupFirebaseMessaging();
+      
+      // Handle foreground messages
+      const unsubscribe = messaging().onMessage(async remoteMessage => {
+        console.log('Foreground message received', remoteMessage);
 
-        // USB Serial port setup
-        RNSerialport.connectDevice('COM6', 115200); 
-        RNSerialport.setReturnedDataType(definitions.RETURNED_DATA_TYPES.HEXSTRING as any);
+        // Check if the notification property exists in the remoteMessage
+        if (remoteMessage.notification) {
+          const { title, body } = remoteMessage.notification;
 
-        // Setup Listeners
-        setupListeners({
-            onReadData: (data: any) => {
-                // Handle the data read from the USB device here...
-                // For example, parsing the data and dispatching it to the Redux store
+          const channelId = await notifee.createChannel({
+            id: 'default',
+            name: 'Default Channel',
+          });
+
+          await notifee.displayNotification({
+            title: title || "Default title",
+            body: body || "Default message",
+            android: {
+              channelId,
             },
-            onError: (error: any) => {
-                console.error("Serial port error:", error);
-                // Handle the error or inform the user
-            },
-            // Add other necessary callbacks here...
-        });
+          });
+        }
+      });
+
+      return () => {
+        unsubscribe();
+      };
     }
-
-    return () => {
-        RNSerialport.disconnect();
-        cleanupListeners(); // cleanup the listeners when the App component is unmounted
-    };
-}, [isFirebaseInitialized, dispatch]);
-
+  }, [isFirebaseInitialized, dispatch]);
 
   if (!isFirebaseInitialized) {
     return (

@@ -19,19 +19,16 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
   
   // Check if the notification property exists in the remoteMessage
   if (remoteMessage.notification) {
-    // Extract the notification details
     const { title, body } = remoteMessage.notification;
 
-    // Create a channel for the notifications
     const channelId = await notifee.createChannel({
       id: 'default',
       name: 'Default Channel',
     });
 
-    // Display the notification using Notifee
     await notifee.displayNotification({
-      title: title || "Default title",  // Default value if title doesn't exist
-      body: body || "Default message",  // Default value if body doesn't exist
+      title: title || "Default title",
+      body: body || "Default message",
       android: {
         channelId,
       },

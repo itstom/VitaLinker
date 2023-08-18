@@ -1,11 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // Define the state shape
-type Notification = {
+export type Notification = {
   id: string;
   type: string;
+  title: string;
+  message: string;
   date: Date;
-  // ... other notification properties
+  isExpired: boolean;
 };
 
 type NotificationState = {
@@ -39,6 +41,6 @@ const notificationSlice = createSlice({
   },
 });
 
-export const { addNotification } = notificationSlice.actions;
+export const { addNotification, editNotification, deleteNotification } = notificationSlice.actions;
 
 export default notificationSlice.reducer;

@@ -24,7 +24,8 @@
   },
   "include": [
     "**/*",
-    "types/**/*.d.ts"
+    "types/**/*.d.ts",
+    "react-native-serialport.d.ts",
   ],
   "exclude": [
     "node_modules",

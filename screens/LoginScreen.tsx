@@ -151,10 +151,12 @@ const useLogin = () => {
                 throw new Error('No hay email asociado a este usuario');
             }
             const user: SimpleUser = {
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                phoneNumber: null,
-                displayName: firebaseUser.displayName,
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              phoneNumber: null,
+              displayName: firebaseUser.displayName,
+              name: null,
+              lastName: null,
             };
             try {
                 console.log("Dispatching login success...");
@@ -301,6 +303,8 @@ const handleVerifyCode = async () => {
           email: userCredential.user.email || '',
           phoneNumber: null,
           displayName: userCredential.user.displayName || '',
+          name: null,
+          lastName: null
         };
         console.log("User: ", user);
         dispatch(loginUserSuccess(user)); // Dispatch action to store the logged in user
@@ -452,9 +456,10 @@ const LoginFormComponents = (
         <Button mode="outlined" 
             onPress={handleLogin} 
             style={[getStyles(actualTheme).roundedButton, { marginBottom: 10 }]}
+            labelStyle={getStyles(actualTheme).buttonText}
             disabled={isLoginDisabled}
         >
-            Iniciar sesión
+            INICIAR SESIÓN
         </Button>
     </>
 );
@@ -485,8 +490,8 @@ const PhoneVerificationComponents = (
 
 const AdditionalButtons = (
     <>
-        <Button mode="text" onPress={() => navigation.navigate('ResetPassword')}>¿Olvidó su contraseña?</Button>
-        <Button mode="text" onPress={() => navigation.navigate('Register')}>Crear una nueva cuenta</Button>
+        <Button mode="text" onPress={() => navigation.navigate('ResetPassword')}>¿OLVIDÓ SU CONTRASEÑA?</Button>
+        <Button mode="text" onPress={() => navigation.navigate('Register')}>CREAR UNA NUEVA CUENTA</Button>
     </>
 );
 

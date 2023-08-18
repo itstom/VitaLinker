@@ -37,7 +37,6 @@ const getStyles = (theme: AppTheme): StyleType => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    alignItems: 'center',
     padding: 15,
     paddingTop: 0,
     paddingHorizontal: 25,
@@ -59,6 +58,7 @@ const getStyles = (theme: AppTheme): StyleType => ({
     marginBottom: 10,
     alignSelf: 'center',
     backgroundColor: theme.colors.primary,
+    text: 'rgb(255, 255, 255)'
   },
   input: {
     marginTop: 10,
@@ -191,7 +191,7 @@ const getStyles = (theme: AppTheme): StyleType => ({
     buttonText: {
     color: 'rgb(255, 255, 255)',
     fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: 14,
     borderColor: theme.colors.background,
   },
     cancelButton: {
@@ -232,7 +232,7 @@ const getStyles = (theme: AppTheme): StyleType => ({
     rectangularButtonText: {
       color: 'rgb(255, 255, 255)',
       fontWeight: 'bold',
-      fontSize: 16,
+      fontSize: 14,
     },
 
 });

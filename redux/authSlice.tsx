@@ -21,10 +21,12 @@ const initialState: AuthState = {
 };
 
 export type SimpleUser = {
+  name: string | null;
   uid: string;
   email: string | null;
   phoneNumber: string | null;
   displayName: string | null;
+  lastName: string | null;
 };
 
 export const loginUser = createAsyncThunk(
@@ -56,10 +58,17 @@ export const loginWithPhone = createAsyncThunk(
 
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
-  async ({ email, password }: { email: string; password: string; }, thunkAPI) => {
+  async ({ email, password, name, lastName }: { email: string; password: string; name: string; lastName: string; }, thunkAPI) => {
     try {
       const response = await auth().createUserWithEmailAndPassword(email, password);
-      return response.user ? true : thunkAPI.rejectWithValue('Registration failed.');
+      if (response.user) {
+        await response.user.updateProfile({
+          displayName: `${name} ${lastName}`
+        });
+        return true;
+      } else {
+        return thunkAPI.rejectWithValue('Registration failed.');
+      }
     } catch (error) {
       return thunkAPI.rejectWithValue((error as any).message || 'An error occurred during registration.');
     }

@@ -6,6 +6,7 @@ import userReducer from './userSlice';
 import themeReducer from '../redux/themeSlice';
 import sensorReducer from '../redux/sensorSlice';
 import notificationReducer from '../redux/notificationSlice';
+import dataReducer from '../redux/dataSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     theme: themeReducer,
     sensor: sensorReducer,
     notification: notificationReducer,
+    data: dataReducer,
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({

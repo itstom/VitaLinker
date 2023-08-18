@@ -36,16 +36,29 @@ export const setupFirebaseMessaging = async () => {
     console.log('Firebase messaging token:', token);
 
     // Listen to whether the token changes
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
+    const unsubscribeOnMessage = messaging().onMessage(async remoteMessage => {
       console.log('FCM Message Data:', remoteMessage.data);
-  });
-  
-  //Clean up functions
-  return () => {
-    unsubscribe();
-  };
+      
+      // If it's a data message, you can display a custom notification here using notifee
+    });
+
+    const unsubscribeOnNotificationOpenedApp = messaging().onNotificationOpenedApp(remoteMessage => {
+      console.log('Notification caused app to open from background state:', remoteMessage);
+    });
+
+    // Check whether the app was opened by a notification
+    const initialNotification = await messaging().getInitialNotification();
+    if (initialNotification) {
+      console.log('App was opened by a notification:', initialNotification);
+    }
+    
+    // Clean up functions
+    return () => {
+      unsubscribeOnMessage();
+      unsubscribeOnNotificationOpenedApp();
+    };
   } catch (error) {
     console.error('Failed to setup Firebase messaging:', error);
-    throw error; // Rethrow the error so it can be caught and handled upstream
+    throw error; 
   }
 };

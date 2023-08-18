@@ -100,7 +100,7 @@ const RegisterScreen: React.FC = () => {
         return;
       }
       // 2. Dispatch registration action
-      const actionResponse = await dispatch(registerUser({ email, password }));
+      const actionResponse = await dispatch(registerUser({ email, password, name, lastName }));
       console.log('actionResponse', actionResponse);
       if (actionResponse.type !== "auth/registerUser/fulfilled" || !actionResponse.payload) {
         throw new Error('Registration failed.'); 

@@ -60,6 +60,10 @@ export const userProfileUpdate = createAsyncThunk<User, any>(
     const user = auth().currentUser;
     if (user) {
       await user.updateProfile(updatedData);
+
+      console.log("DisplayName from Firebase:", user.displayName);
+
+      const nameParts = user.displayName?.split(' ') || [];
       return {
         uid: user.uid,
         email: user.email || null,
@@ -68,6 +72,8 @@ export const userProfileUpdate = createAsyncThunk<User, any>(
         isAnonymous: user.isAnonymous,
         phoneNumber: user.phoneNumber || null,
         photoURL: user.photoURL || null,
+        name: nameParts[0] || null,
+        lastName: nameParts[1] || null,
       };
     } else {
       throw new Error('No user found');

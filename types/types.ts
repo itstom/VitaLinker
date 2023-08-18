@@ -12,6 +12,8 @@ export type User = {
   isAnonymous: boolean;
   phoneNumber: string | null;
   photoURL: string | null;
+  name: string | null;
+  lastName: string | null;
 }
 
 export type ConfirmationResult = FirebaseAuthTypes.ConfirmationResult;
@@ -35,15 +37,6 @@ export interface FirebaseTimestamp {
   nanoseconds: number;
 };
 
-export type Notification = {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  date: Date | FirebaseTimestamp; 
-  isExpired: boolean;
-};
-
 export type Settings = {
   id?: string;
   isDarkMode: boolean;
@@ -51,6 +44,13 @@ export type Settings = {
   isNotificationSoundEnabled: boolean;
   isNotificationVibrationEnabled: boolean;
 };
+
+export interface RootState {
+  data: string;
+  user: User | null;
+  settings: Settings;
+  notifications: Notification[];
+}
 
 export interface NotificationPickerProps {
   isDarkMode: boolean;

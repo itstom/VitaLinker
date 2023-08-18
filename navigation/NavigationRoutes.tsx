@@ -118,16 +118,16 @@ export const UserNavigator: React.FC<UserNavigatorProps> = ({ isAuthenticated })
             headerLeft: () => (
                 <Icon 
                     name="bars" 
-                    size={25} 
+                    size={35} 
                     color={actualTheme.colors.text} 
                     onPress={() => navigation.toggleDrawer()} 
                 />
             )
         })}
     >
-      <UserDrawer.Screen name="Home" component={HomeScreen} />
-      <UserDrawer.Screen name="Dashboard" component={DashboardScreen} />
-      <UserDrawer.Screen name="Settings" component={SettingsScreen} />
+      <UserDrawer.Screen name="Home" component={HomeScreen} options={{title: 'Inicio'}}/>
+      <UserDrawer.Screen name="Dashboard" component={DashboardScreen} options={{title: 'Tablero'}} />
+      <UserDrawer.Screen name="Settings" component={SettingsScreen} options={{title: 'Configuración'}}/>
     </UserDrawer.Navigator>
   );
 };
@@ -135,7 +135,7 @@ export const UserNavigator: React.FC<UserNavigatorProps> = ({ isAuthenticated })
 export const RootNavigator = () => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   return (
-    <RootStack.Navigator>
+    <RootStack.Navigator screenOptions={{headerShown: false}}>
       { isAuthenticated ? (
           <RootStack.Screen name="Main" component={UserNavigatorWrapper} />
         )  : (

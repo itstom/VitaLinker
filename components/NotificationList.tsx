@@ -1,7 +1,7 @@
 // components/NotificationList.tsx
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Notification } from '../types/types';
+import { Notification } from '../redux/notificationSlice';
 
 interface NotificationListProps {
     notifications: Notification[];
